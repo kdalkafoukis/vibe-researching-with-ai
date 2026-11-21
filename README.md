@@ -2,32 +2,21 @@
 
 Research done by directing AI models. I choose the problems, set the direction and review the results. The model does the derivations, proofs, numerical checks and writing. Each paper credits the model it was made with.
 
+> ⚠️ Everything here is a draft and has not been peer reviewed.
+
 ## Papers
 
-### Quantum speedup of Björklund's algorithm
-
-**Amplifying Determinant Sums: A Quantum Algorithm for Undirected Hamiltonicity in O\*((8/3)^{n/2}) Time**
-Konstantinos Dalkafoukis, with Claude Opus 5.5 (Anthropic) · [PDF](papers/quantum-hamiltonicity/paper.pdf)
-
-> ⚠️ Draft, not peer reviewed.
-
-**Result.** This is a quantum algorithm that decides whether an undirected graph on n vertices has a Hamiltonian cycle. It runs in O\*(1.6330ⁿ) time, with poly(n) qubits and no QRAM, and it never gives a false "yes". The same argument gives O\*(1.6330ᵏ) for the k-path problem.
-
-| Algorithm | Model | General undirected graphs |
+| Paper | Result | Best known before |
 |---|---|---|
-| Björklund (2010) | classical | O\*(1.657ⁿ) |
-| Ambainis et al. (2019) | quantum, exponential QRAM | O\*(1.728ⁿ) |
-| **This paper** | **quantum, poly(n) qubits** | **O\*(1.633ⁿ)** |
+| [Amplifying Determinant Sums](papers/quantum-hamiltonicity/): quantum undirected Hamiltonicity | **O\*(1.633ⁿ)** = O\*((8/3)^(n/2)) | classical O\*(1.657ⁿ), quantum O\*(1.728ⁿ) |
+| [Amplifying Narrow Sieves](papers/quantum-set-packing/): quantum 3-set packing | **O\*(2.804ᵖ)** = O\*((8 − 3√3)ᵖ) | classical O\*(3.343ᵖ) |
 
-To our knowledge, this is the first quantum algorithm faster than the best known classical one on general undirected graphs. On graphs of maximum degree 3 or 4, quantum backtracking (Moylett–Linden–Montanaro) was already faster than classical.
+Both papers are by Konstantinos Dalkafoukis, with Claude Opus 5.5 (Anthropic). Each folder contains the PDF, the LaTeX source and the scripts that check the numbers.
 
-**Idea.** Björklund's algorithm repeats a random test. Each test costs 2^(n/2+m) and succeeds with an exponentially small probability P. Amplitude amplification needs 1/√P repetitions instead of 1/P. Re-optimising the cutoff then moves m from 0.207n to n/6, which gives (8/3)^(n/2).
+## The common idea
 
-**Status.** The bound is proved analytically from Björklund's published lemmas. The scripts only cross-check it.
-- *Checked:* the closed-form optimum, Björklund's lemmas and his polynomial-space variant (read against the original paper), and the exact success-probability formula.
-- *Open:* whether the result is novel, and independent review. Amplifying a Monte Carlo algorithm is a standard technique, so experts may already know it.
+The best classical algorithms for both problems repeat a cheap random test that rarely succeeds: Björklund's determinant sums for Hamiltonicity, and the narrow sieve of Björklund, Husfeldt, Kaski and Koivisto for set packing. A test that succeeds with probability P must be repeated about 1/P times. Amplitude amplification needs only about 1/√P repetitions. Once rare successes are cheaper, it pays to re-tune the test to be cheaper still. The re-tuned optimum has a closed form in both cases.
 
-**Files** in `papers/quantum-hamiltonicity/`:
-- `paper.tex`: build with `latexmk -pdf paper.tex`. Set `\arxivtrue` for the arXiv author line.
-- `optimize.py`, `verify.py`, `kpath.py`: numerical checks (Python 3, NumPy, SciPy).
-- `make_data.py`: generates the figure data in `figs/`.
+## Status
+
+Both bounds are proved analytically from published lemmas, and the scripts only cross-check them. Two questions are still open: novelty (amplifying a Monte Carlo algorithm is standard, so experts may already know these results) and independent review.
