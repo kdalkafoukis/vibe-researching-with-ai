@@ -66,7 +66,7 @@ A Quantum Algorithm for Undirected Hamiltonicity in $\Ostar\big((8/3)^{n/2}\big)
   Claude Opus 5.5 (Anthropic)\thanks{AI model. Derivations, proofs, numerical checks and writing, under the direction of the first author.}
 }
 \fi
-\date{Draft of 14 November 2026 --- not peer reviewed}
+\date{Draft of 14 November 2026, revised 21 November 2026 --- not peer reviewed}
 
 \begin{document}
 \maketitle
@@ -445,8 +445,8 @@ For maximum degree 5 or 6, \cref{thm:main} improves the quantum bound from $\Ost
 \paragraph{Where amplification does not help.}
 Björklund's $\Ostar(2^{n/2})$ algorithm for bipartite graphs, and his $\Ostar(2^{n-i})$ variant given an independent set of size $i$, use a fixed partition. There is no random trial to amplify.
 
-\paragraph{Weighted TSP (conjecture).}
-If a weighted variant of the sieve keeps the same trial structure, with a factor polynomial in the largest weight, the same base follows. We have not checked this.
+\paragraph{Weighted TSP.}
+Björklund handles positive integer edge weights with one extra indeterminate $y$ that records the total weight~\cite[\S 5]{bjorklund}. The coefficient of $y^l$ is nonzero only if a Hamiltonian cycle of weight $l$ exists, and a fast Fourier transform over $\GF(2^k)$ with $2^k > w$ recovers all coefficients, where $w$ is the sum of all weights. A run then costs $\Ostar(w\cdot 2^{n/2+m})$ and stays one-sided for the question ``is there a tour of weight at most $W$?'' Amplifying it as in \cref{alg:main} gives $\Ostar\big(w\,(8/3)^{n/2}\big)$ for that question, and binary search over $W$ finds the optimum with $O(\log w)$ more runs. This compares with Björklund's classical $\Ostar(w\cdot 1.657^n)$.
 
 % ===============================================================
 \section{Numerical checks}\label{sec:numerics}
@@ -498,7 +498,7 @@ Scripts are listed in \cref{app:repro}.
 The argument is short because it reuses published lemmas. Three points need checking before the result can be claimed.
 \begin{enumerate}[nosep]
   \item \textbf{Novelty.} Searches in November 2026 found no quantum bound below $1.657^n$ for undirected Hamiltonicity, and none below $1.657^k$ for $k$-path. Amplifying a Monte Carlo algorithm is standard, so the observation may be folklore. Experts should be consulted before any claim of priority.
-  \item \textbf{Polynomial-space running time.} Björklund states the polynomial-space variant but not its total running time. Our bound of $2^{|L|}\cdot\mathrm{poly}(n)$ per run follows from his \S 4, where each term is a polynomial-time walk count followed by a determinant. This should be confirmed line by line.
+  \item \textbf{Polynomial-space running time.} Björklund states the polynomial-space variant but not its total running time. Our bound of $2^{|L|}\cdot\mathrm{poly}(n)$ per run follows from his \S 4. There, each of the $2^{|L|}$ terms is a polynomial-time walk count followed by a determinant, evaluated at $|L|\cdot n$ interpolation points. We have checked this against his text; an expert should still confirm it.
   \item \textbf{Reliance on published lemmas.} We use Lemmas 9--11 of~\cite{bjorklund} and Lemma 7 of~\cite{bhkk} as published and have not re-proved them.
 \end{enumerate}
 
@@ -508,9 +508,9 @@ The algorithm needs $\mathrm{poly}(n)$ logical qubits (the evaluation point alon
 \needspace{8\baselineskip}
 \paragraph{Open problems.}
 \begin{enumerate}[nosep]
-  \item \textbf{Directed graphs.} Koana and Kumabe decide directed Hamiltonicity in $\Ostar\big((375/196)^n\big) \approx \Ostar(1.9133^n)$~\cite{kk}. Their algorithm runs about $(50/49)^n$ trials of cost $(15/8)^n$. Amplifying the trials naively would give about $1.894^n$, before re-optimising their parameters. Two obstacles remain: the error is two-sided, and the algorithm appears to need exponential space.
+  \item \textbf{Directed graphs.} Koana and Kumabe decide directed Hamiltonicity in $\Ostar\big((375/196)^n\big) \approx \Ostar(1.9133^n)$~\cite{kk}. Their algorithm runs about $(50/49)^n$ trials of cost $(15/8)^n$, so amplifying the trials would give about $1.894^n$ before re-optimising. That does not beat the $\Ostar(1.728^n)$ quantum algorithm of Ambainis et al.~\cite{ambainis}, which already covers directed graphs, though it uses QRAM. Amplification could only matter for a polynomial-space quantum algorithm. Their algorithm appears to need exponential space, and its error is two-sided.
   \item \textbf{Speed-ups inside a trial.} Each trial is an inclusion--exclusion sum of $2^{|L|}$ field elements. Exact sums admit no generic quadratic quantum speed-up, but this sum is highly structured. Any gain there would compound with ours.
-  \item \textbf{Other sieves.} The packing and matching algorithms of~\cite{bhkk} (for example 3-set packing in $\Ostar(1.493^{3p})$) use the same one-sided template and may improve the same way.
+  \item \textbf{Other sieves.} The set-packing sieve of~\cite{bhkk} uses the same one-sided template. A companion note~\cite{packing} works it out: 3-set packing drops from $\Ostar\big((9-4\sqrt2)^p\big) \approx \Ostar(3.343^p)$ to $\Ostar\big((8-3\sqrt3)^p\big) \approx \Ostar(2.804^p)$. Other one-sided sieves may improve the same way.
   \item \textbf{Beyond $\sqrt{8/3}$.} Within this family of trials the bound is optimal, since $\varphi$ is convex. Going lower needs a different random trial, for example partitions into more than two parts, or partitions adapted to the graph.
 \end{enumerate}
 
@@ -530,6 +530,7 @@ Konstantinos Dalkafoukis set the research direction and drove the project. That 
 \bibitem{dicke} A.~B{\"a}rtschi, S.~Eidenbenz. Deterministic preparation of Dicke states. In \emph{Proc.\ FCT}, 2019.
 \bibitem{heldkarp} M.~Held, R.~M.~Karp. A dynamic programming approach to sequencing problems. \emph{J.\ SIAM} 10(1), 1962.
 \bibitem{kk} Y.~Koana, S.~Kumabe. Breaking the $2^n$ barrier for directed Hamiltonicity. 2026. \href{https://arxiv.org/abs/2609.39062}{arXiv:2609.39062}.
+\bibitem{packing} K.~Dalkafoukis, Claude Opus~5.5. Amplifying narrow sieves: quantum 3-set packing in $\Ostar\big((8-3\sqrt3)^p\big)$ time. Draft, 2026. \url{https://github.com/kdalkafoukis/vibe-researching-with-ai/tree/main/papers/quantum-set-packing}.
 \bibitem{montanaro} A.~Montanaro. Quantum-walk speedup of backtracking algorithms. \emph{Theory of Computing} 14(15), 2018. \href{https://arxiv.org/abs/1509.02374}{arXiv:1509.02374}.
 \bibitem{mlm} D.~J.~Moylett, N.~Linden, A.~Montanaro. Quantum speedup of the traveling-salesman problem for bounded-degree graphs. \emph{Phys.\ Rev.\ A} 95, 032323, 2017. \href{https://arxiv.org/abs/1612.06203}{arXiv:1612.06203}.
 \end{thebibliography}

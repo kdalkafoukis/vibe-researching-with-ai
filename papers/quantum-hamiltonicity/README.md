@@ -43,9 +43,9 @@ Because rare successes are cheaper quantumly, the best cutoff moves from 0.207n 
 - **§2 Preliminaries:** the parts of Björklund's framework that are used (his Lemmas 9–11), and amplitude amplification.
 - **§3 The algorithm:** two algorithm boxes, the register layout and the gate count.
 - **§4 Analysis:** soundness, completeness, and the optimisation lemma with a closed-form optimum.
-- **§5 Extensions:** Hamiltonian path, finding the cycle, k-path via the narrow sieve of Björklund–Husfeldt–Kaski–Koivisto, and bounded-degree graphs.
+- **§5 Extensions:** Hamiltonian path, finding the cycle, k-path via the narrow sieve of Björklund–Husfeldt–Kaski–Koivisto, bounded-degree graphs, and weighted TSP in O\*(w·1.633ⁿ).
 - **§6 Numerical checks:** exact finite-n convergence to √(8/3), and a Monte Carlo test of the counting formula.
-- **§7 Limitations and open problems:** novelty, directed graphs, and other sieves.
+- **§7 Limitations and open problems:** novelty, directed graphs, and other sieves (worked out for set packing in [quantum-set-packing](../quantum-set-packing/)).
 - **Appendix:** an exact formula for the direct-arc distribution, and reproducibility notes.
 
 ## Status
