@@ -36,19 +36,19 @@ This is the same idea as the [Hamiltonicity paper](../quantum-hamiltonicity/):
 
 ## Status
 
-The bound is **proved analytically** from the narrow-sieve paper's Lemmas 12 and 13 (§4). The script only cross-checks it.
+The bound is **proved analytically** from the narrow-sieve paper's Lemmas 12 and 13 (§4). The scripts only cross-check it. `sieve_check.py` runs the sieve itself end to end on small instances. Across 1,602 cases it matched the closed formula every time, never gave a false positive, and on an instance with a unique packing it fired on exactly the fraction of partitions that Lemma 12 predicts.
 
 Still open:
 - **Novelty.** Amplifying a Monte Carlo algorithm is a standard technique, so experts may already know this.
-- **Independent review.**
-- **No implementation of the sieve itself.** Only its probability lemma was checked by enumeration.
+- **Independent review.** Tests on small instances are not a proof.
 
 ## Reproduce
 
 | What | Command |
 |---|---|
 | Build the PDF | `latexmk -pdf paper.tex` |
-| All checks, plus the figure data in `figs/` | `python3 packing.py` (standard library only, about 15 s) |
+| Analysis checks, plus the figure data in `figs/` | `python3 packing.py` (standard library only, about 15 s) |
+| The sieve end to end on small instances | `python3 sieve_check.py` (standard library only, about 25 s) |
 
 `packing.py` checks four things:
 - the closed form against a grid search;

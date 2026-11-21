@@ -262,12 +262,18 @@ Classically the same specialisation gives $(9-4\sqrt2)^{n/3} = 1.4953^n$, the ru
 \section{Numerical checks}\label{sec:numerics}
 % ===============================================================
 
-The script \texttt{packing.py} (Python~3, standard library only) checks four things.
+The script \texttt{packing.py} (Python~3, standard library only) checks the analysis in four ways.
 \begin{itemize}[nosep]
   \item \textbf{Closed form.} \Cref{lem:opt} agrees with a direct grid search over $(\beta_1,\beta_2)$ for $q = 3,\dots,8$, classically and quantumly. The classical values agree with the table in~\cite{bhkk} to within $10^{-4}$ for every listed $q$ from 3 to 500.
   \item \textbf{\Cref{fact:prob}.} Exhaustive enumeration of all $(n_1,n-n_1)$-partitions reproduces the formula exactly, as integer counts, for $(n,q,p) = (10,3,3)$, $(11,4,2)$, $(12,3,4)$ and $(13,5,2)$ and every $n_1,p_1,p_2$.
   \item \textbf{Finite $p$.} With exact binomials for perfect packings ($n = pq$), the optimal quantum base for $q = 3$ is $2.8006$, $2.8057$, $2.8052$ and $2.8046$ at $p = 100$, $300$, $1000$ and $3000$, approaching $8 - 3\sqrt3 = 2.8038$. The classical base approaches $9 - 4\sqrt2$ in the same way.
   \item \textbf{Figure data.} \Cref{fig:bases} plots the bases per covered element for $q \le 30$.
+\end{itemize}
+A second script, \texttt{sieve\_check.py} (also standard library only), implements the sieve itself on small instances over $\GF(2^{16})$. It evaluates $\sum_J [w_0^{2p_0}w_1^{2p_1}w_2^{2p_2}]\,S(J)\det T(J)$ as in~\cite[(20)--(24)]{bhkk}, computing each $\det T(J)$ numerically and recovering the coefficient in $w_1, w_2$ by interpolation. The test instances were random 3-set and 4-set families with $n \le 9$, an exact-cover instance with $n = 9$, and a family with no 2-packing.
+\begin{itemize}[nosep]
+  \item \textbf{Closed form.} In all $1{,}602$ cases, the sieve's value equals, at the same random point, the sum of the monomials~\cite[(18)]{bhkk} over all $(p_0,p_1,p_2)$-packings, compatible involutions and bijective labelings.
+  \item \textbf{One-sided error.} The value was never nonzero without a $(p_0,p_1,p_2)$-packing, and never zero with one.
+  \item \textbf{\Cref{fact:prob} end to end.} The script also takes an instance with $n = 10$ and a unique 3-packing. For every $(p_0,p_1,p_2)$, the sieve fires on exactly the number of partitions predicted by \cref{fact:prob}. A random point occasionally hits a root of a nonzero polynomial, as \cref{fact:sz} allows. The script re-tests such partitions at fresh points and reports them separately.
 \end{itemize}
 
 \begin{figure}[t]
@@ -303,7 +309,7 @@ The script \texttt{packing.py} (Python~3, standard library only) checks four thi
 
 \begin{enumerate}[nosep]
   \item \textbf{Novelty.} Searches in November 2026 found no faster randomized classical algorithm for 3-set packing than~\cite{bhkk}, and no quantum algorithm with running time exponential only in~$p$. Amplifying a Monte Carlo algorithm is a standard technique, so the observation may be folklore. Experts should be consulted before any claim of priority.
-  \item \textbf{Reliance on published lemmas.} We use Lemmas 12 and 13 and \S\S 4.5--4.7 of~\cite{bhkk} as published. We checked Lemma 12 by exhaustive enumeration, but we did not implement the sieve itself.
+  \item \textbf{Reliance on published lemmas.} We use Lemmas 12 and 13 and \S\S 4.5--4.7 of~\cite{bhkk} as published and have not re-proved them. We tested them end to end on small instances (\cref{sec:numerics}), but tests on small instances are not a proof.
   \item \textbf{Special cases.} The bound is for general $q$-set packing. Some special cases have faster dedicated algorithms. For example, $q$-dimensional $p$-matching takes $\Ostar(2^{(q-2)p})$ time~\cite[Theorem~5]{bhkk}, with a constant success probability per trial, so there is nothing to amplify.
   \item \textbf{Exact cover.} We compared \cref{cor:x3c} with Björklund's algorithm and with the quantum algorithms of~\cite{ambainis,gaspersli}, but we did not search the exact-cover literature exhaustively.
   \item \textbf{A constant in~\cite{bhkk}.} The statement of~\cite[Theorem~2]{bhkk} reads $1.4933^{3p}$. The analysis in~\cite[\S 4.7]{bhkk} and its table give $3.3432^p = 1.4953^{3p}$, which equals $(9-4\sqrt2)^p$ and is the value cited in later work. We compare against that value.
