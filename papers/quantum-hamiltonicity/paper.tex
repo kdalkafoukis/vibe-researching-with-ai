@@ -452,10 +452,11 @@ Björklund handles positive integer edge weights with one extra indeterminate $y
 \section{Numerical checks}\label{sec:numerics}
 % ===============================================================
 
-\Cref{fig:convergence} evaluates the exponent with exact binomial coefficients instead of Stirling's formula. The optimal finite-$n$ base decreases monotonically to $\sqrt{8/3}$ and stays below the classical curve at every $n$. Two further checks:
+\Cref{fig:convergence} evaluates the exponent with exact binomial coefficients instead of Stirling's formula. The optimal finite-$n$ base decreases monotonically to $\sqrt{8/3}$ and stays below the classical curve at every $n$. Three further checks:
 \begin{itemize}[nosep]
   \item \textbf{Counting formula.} For $n = 24$, $2\times 10^5$ random balanced partitions give a direct-arc distribution that matches the exact formula of \cref{app:count} to within $0.0016$ at every $m$ (\cref{fig:mc}).
   \item \textbf{$k$-path.} Exact binomials at $k = 3000$ give a quantum base of $1.6349$, converging to $\sqrt{8/3}$.
+  \item \textbf{Björklund's test end to end.} \texttt{bjorklund\_check.py} implements the test over $\GF(2^{16})$ on small graphs with $n \le 10$, for every balanced partition and every $m$. It covers random graphs, two hand-made graphs (one of them non-Hamiltonian) and the cycles $C_8$ and $C_{10}$. In all $2{,}560$ cases, $\Lambda$ computed through Lemma~6 of~\cite{bjorklund} equals the closed form of \cref{fact:zero} at the same random point. On the random and hand-made graphs, the polynomial-space route through walks (\cref{fact:space}) gives the same value too. The test was never nonzero without a Hamiltonian cycle with $m$ direct arcs, and never zero with one. On $C_8$ and $C_{10}$ it fires on exactly the partitions counted by \cref{lem:count}.
 \end{itemize}
 Scripts are listed in \cref{app:repro}.
 
@@ -499,7 +500,7 @@ The argument is short because it reuses published lemmas. Three points need chec
 \begin{enumerate}[nosep]
   \item \textbf{Novelty.} Searches in November 2026 found no quantum bound below $1.657^n$ for undirected Hamiltonicity, and none below $1.657^k$ for $k$-path. Amplifying a Monte Carlo algorithm is standard, so the observation may be folklore. Experts should be consulted before any claim of priority.
   \item \textbf{Polynomial-space running time.} Björklund states the polynomial-space variant but not its total running time. Our bound of $2^{|L|}\cdot\mathrm{poly}(n)$ per run follows from his \S 4. There, each of the $2^{|L|}$ terms is a polynomial-time walk count followed by a determinant, evaluated at $|L|\cdot n$ interpolation points. We have checked this against his text; an expert should still confirm it.
-  \item \textbf{Reliance on published lemmas.} We use Lemmas 9--11 of~\cite{bjorklund} and Lemma 7 of~\cite{bhkk} as published and have not re-proved them.
+  \item \textbf{Reliance on published lemmas.} We use Lemmas 9--11 of~\cite{bjorklund} and Lemma 7 of~\cite{bhkk} as published and have not re-proved them. We tested Björklund's lemmas end to end on small graphs (\cref{sec:numerics}), but tests on small graphs are not a proof.
 \end{enumerate}
 
 \paragraph{Cost model.}
@@ -586,12 +587,13 @@ Summed over $r = 1,\dots,k$, these counts give exactly $\binom{n}{k}$ (we checke
 \section{Reproducibility}\label{app:repro}
 % ===============================================================
 
-All numbers in this paper come from short Python scripts (Python 3, NumPy, SciPy), included with the source:
+All numbers in this paper come from short Python scripts, included with the source (Python 3; \texttt{optimize.py} and \texttt{kpath.py} also need NumPy and SciPy):
 \begin{itemize}[nosep]
   \item \texttt{optimize.py}: optimises the exponent over $(\alpha,\mu)$, classically and quantumly.
   \item \texttt{verify.py}: Monte Carlo check of the direct-arc distribution and exact finite-$n$ exponents.
   \item \texttt{kpath.py}: the same optimisation for the $k$-path sieve.
   \item \texttt{make\_data.py}: writes the data files for \cref{fig:tradeoff,fig:convergence,fig:mc}.
+  \item \texttt{bjorklund\_check.py}: Björklund's test end to end on small graphs (about 4 minutes).
 \end{itemize}
 
 \end{document}
