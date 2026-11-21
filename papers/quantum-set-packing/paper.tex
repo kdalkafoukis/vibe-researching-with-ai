@@ -1,0 +1,335 @@
+\documentclass[11pt,a4paper]{article}
+
+% ---------------------------------------------------------------
+%  Authorship switch.
+%  \arxivfalse : credit line as requested (you + Claude Opus 5.5).
+%  \arxivtrue  : arXiv-compliant version. arXiv does not allow AI
+%                tools to be listed as authors; the model is then
+%                credited in a title footnote and the statement at
+%                the end instead.
+% ---------------------------------------------------------------
+\newif\ifarxiv
+\arxivfalse
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[sc]{mathpazo}
+\linespread{1.06}
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage[most]{tcolorbox}
+\usepackage{xurl}
+\usepackage{needspace}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+\definecolor{qblue}{RGB}{37,99,235}
+\definecolor{cgray}{RGB}{115,115,115}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{fact}{Fact}
+\renewcommand{\thefact}{\Alph{fact}}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newtcolorbox{mainresult}{colback=qblue!4,colframe=qblue!60,boxrule=0.6pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+
+\newcommand{\Ostar}{O^{*}}
+\newcommand{\GF}{\mathrm{GF}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\A}{\mathcal{A}}
+
+\title{Amplifying Narrow Sieves:\\[2pt]
+Quantum 3-Set Packing in $\Ostar\big((8-3\sqrt3)^{p}\big)$ Time}
+
+\ifarxiv
+\author{Konstantinos Dalkafoukis\thanks{[Affiliation / e-mail.] This paper was developed with Claude Opus~5.5 (Anthropic) under the author's direction; see the contribution and AI-use statement at the end.}}
+\else
+\author{
+  Konstantinos Dalkafoukis\thanks{Research direction, problem choice and review. Drove the project.}
+  \and
+  Claude Opus 5.5 (Anthropic)\thanks{AI model. Derivations, proofs, numerical checks and writing, under the direction of the first author.}
+}
+\fi
+\date{Draft of 21 November 2026 --- not peer reviewed}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+We give a quantum algorithm that decides whether a family of 3-element sets contains $p$ pairwise disjoint members in time $\Ostar\big((8-3\sqrt3)^{p}\big) \subset O(2.8039^{p})$. It uses polynomially many qubits and no quantum RAM, and its error is one-sided. The fastest known randomized classical algorithm is the narrow sieve of Björklund, Husfeldt, Kaski and Koivisto, which runs in $\Ostar(3.3432^p)$; we show that its base is exactly $9-4\sqrt2$. We found no earlier quantum algorithm for this problem whose running time is exponential only in~$p$.
+
+The algorithm applies amplitude amplification to the random trials of the narrow sieve and re-optimises the trial parameters. For sets of any size $q$ we give the optimal base in closed form, classically and quantumly. For exact cover by 3-sets, where $p = n/3$, the bound becomes $\Ostar(1.4102^{n})$. This note is the set-packing counterpart of our amplified Hamiltonicity algorithm~\cite{hamilton}.
+\end{abstract}
+
+% ===============================================================
+\section{Introduction}
+% ===============================================================
+
+Let $\F$ be a family of $q$-element subsets of an $n$-element universe $U$, with $|\F|$ polynomial in $n$. A \emph{$p$-packing} is a set of $p$ pairwise disjoint members of $\F$. The \emph{$p$-packing of $q$-sets} problem asks whether one exists. For $q = 3$ it contains vertex-disjoint triangle packing, 3-dimensional matching and exact cover by 3-sets as special cases. It is NP-complete, and the parameterized question is how small the base $c$ of a $c^p\cdot\mathrm{poly}(n)$ running time can be.
+
+After a long series of improvements~\cite[Table~2]{bhkk}, Björklund, Husfeldt, Kaski and Koivisto gave a randomized algorithm, the \emph{narrow sieve}, running in $\Ostar(3.3432^p)$ time and polynomial space~\cite{bhkk}. As far as we can tell it is still the fastest randomized algorithm; later work cites it as such~\cite{zehavi15,zehavi23}. The fastest deterministic algorithm runs in $\Ostar(8.097^p)$~\cite{zehavi23}.
+
+On the quantum side, Gaspers and Li give quantum algorithms for set packing, partition and cover whose running time is exponential in the universe size~$n$~\cite{gaspersli}, and Ambainis et al.\ give an $\Ostar(1.7274^n)$ algorithm for set cover~\cite{ambainis}. We found no quantum algorithm whose running time is exponential only in~$p$.
+
+\begin{mainresult}
+\begin{theorem}\label{thm:main}
+There is a quantum algorithm that decides $p$-packing of 3-sets in time $\Ostar\big((8-3\sqrt3)^p\big) \subset O(2.8039^p)$, using $\mathrm{poly}(n)$ qubits and no QRAM. It never answers ``yes'' when there is no $p$-packing, and it answers ``yes'' with probability at least $2/3$ when there is one.
+\end{theorem}
+\begin{theorem}\label{thm:general}
+For every $q \ge 3$, $p$-packing of $q$-sets can be decided with one-sided error in quantum time $\Ostar(c_q^{\,p})$, where
+\[
+  c_q \;=\; 2^q\,\frac{Z^{(q-1)/2}}{W^{q/2}},\qquad
+  Z = 1 + qx + \tbinom q2 x^2,\quad
+  W = 1 + (q-1)x + \tbinom{q-1}2 x^2,
+\]
+and $x$ is the positive root of $\binom{q-1}{2}x^2 - 3(q-1)x - 3 = 0$.
+\end{theorem}
+\begin{corollary}\label[corollary]{cor:x3c}
+Exact cover by 3-sets can be decided with one-sided error in quantum time $\Ostar\big((8-3\sqrt3)^{n/3}\big) \subset O(1.4102^{n})$.
+\end{corollary}
+\end{mainresult}
+
+\paragraph{The idea.}
+A run of the narrow sieve picks a random partition of the universe and evaluates an algebraic sum of $2^{|L|}$ terms. The sum detects a fixed packing only if the partition cuts it in a prescribed pattern, which happens with exponentially small probability~$P$. Classically about $1/P$ runs are needed; amplitude amplification needs about $1/\sqrt P$. Because rare patterns become cheaper, the optimal pattern shifts towards cheaper runs (\cref{tab:bases}). The same mechanism takes undirected Hamiltonicity from $\Ostar(1.657^n)$ to $\Ostar\big((8/3)^{n/2}\big)$~\cite{hamilton}. Here the gain is larger, because the classical optimum already relies on rarer events.
+
+\paragraph{A closed form for the classical bound.}
+The same optimisation with $1/P$ in place of $1/\sqrt P$ gives the classical base in closed form (\cref{lem:opt}). For $q = 3$ it is exactly $9 - 4\sqrt2 = 3.34315\ldots$, and the optimal parameters $\beta_1 = 0.281509$ and $\beta_2 = 0.679622$ reported in~\cite[\S 4.7]{bhkk} are $3x/Z$ and $3x^2/Z$ with $x = 1+\sqrt2$.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}rrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{base per packed set} & \multicolumn{2}{c}{base per covered element} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+$q$ & classical~\cite{bhkk} & \textbf{quantum (this paper)} & classical & \textbf{quantum} \\
+\midrule
+3 & $3.3431$ & $\mathbf{2.8038}$ & $1.4953$ & $\mathbf{1.4101}$ \\
+4 & $7.2561$ & $\mathbf{5.9752}$ & $1.6413$ & $\mathbf{1.5635}$ \\
+5 & $15.0717$ & $\mathbf{12.3154}$ & $1.7204$ & $\mathbf{1.6523}$ \\
+6 & $30.8178$ & $\mathbf{25.0732}$ & $1.7707$ & $\mathbf{1.7108}$ \\
+7 & $62.5413$ & $\mathbf{50.7427}$ & $1.8055$ & $\mathbf{1.7524}$ \\
+8 & $126.3851$ & $\mathbf{102.3453}$ & $1.8311$ & $\mathbf{1.7834}$ \\
+\bottomrule
+\end{tabular}
+\caption{Running-time bases for $p$-packing of $q$-sets. The classical column is the narrow sieve~\cite{bhkk}, evaluated with the closed form of \cref{lem:opt}; it agrees with the table in~\cite{bhkk} to within $10^{-4}$. The base per covered element is the $q$-th root.}
+\label{tab:bases}
+\end{table}
+
+% ===============================================================
+\section{Preliminaries}\label{sec:prelim}
+% ===============================================================
+
+\paragraph{Notation.}
+$\Ostar(\cdot)$ hides factors polynomial in $n$ and $|\F|$. $H(x) = -x\log_2 x - (1-x)\log_2(1-x)$ is the binary entropy, and $H(\beta_0,\beta_1,\beta_2) = -\sum_i \beta_i\log_2\beta_i$.
+
+\paragraph{The narrow sieve.}
+We recall the parts of~\cite[\S 4]{bhkk} that we use. Fix integers $n_1$ and $p_0+p_1+p_2 = p$. An ordered partition $U = U_1 \cup U_2$ with $|U_1| = n_1$ is an $(n_1,n-n_1)$-partition. A $p$-packing $\A$ is a \emph{$(p_0,p_1,p_2)$-packing} if exactly $p_j$ of its sets meet $U_1$ in exactly $j$ points, for $j = 0,1,2$, and none meets $U_1$ in more than two points. The sieve uses a label set $L$ of size
+\[
+  |L| \;=\; q p_0 + (q-1)p_1 + (q-2)p_2 ,
+\]
+one label for each point of the packing that lies in $U_2$.
+
+\begin{fact}[{\cite[Lemma 12]{bhkk}}]\label{fact:prob}
+For a fixed $p$-packing $\A$ and a uniformly random $(n_1, n-n_1)$-partition,
+\[
+  \Pr\big[\A \text{ is a } (p_0,p_1,p_2)\text{-packing}\big]
+  \;=\; \binom{p}{p_1+p_2}\binom{p_1+p_2}{p_2}\, q^{p_1}\binom q2^{p_2}\binom{n-pq}{n_1-p_1-2p_2}\Big/\binom{n}{n_1}.
+\]
+With $n_1 = \lfloor\delta n\rfloor$ and $\delta = (p_1+2p_2)/(pq)$, this is $\Theta^*\Big(\binom{p}{p_1+p_2}\binom{p_1+p_2}{p_2} q^{p_1}\binom q2^{p_2} \Big/ \binom{pq}{p_1+2p_2}\Big)$~\cite[eq.~(16)]{bhkk}.
+\end{fact}
+
+\begin{fact}[{\cite[Lemma 13, \S\S 4.5--4.7]{bhkk}}]\label{fact:sieve}
+For a fixed partition and fixed $(p_0,p_1,p_2)$ there is a polynomial $Q$ over $\GF(2^b)$ in indeterminates $x_A$, $y_K$ and $z_{u,\ell}$, of total degree less than $6n$, such that:
+\begin{enumerate}[nosep]
+  \item $Q$ is not identically zero if and only if $\F$ contains a $(p_0,p_1,p_2)$-packing;
+  \item $Q = \sum_{J \subseteq L} R_J$, where each $R_J$ is evaluated at a given point with $\mathrm{poly}(n,|\F|)$ field operations in polynomial space, as a coefficient of $S(J)\det T(J)$ in the indeterminates $w_0,w_1,w_2$.
+\end{enumerate}
+\end{fact}
+\noindent
+The degree bound follows from the bound $2n_1 + (2q+4)p_0 + (2q+3)p_1 + (2q+2)p_2$ of~\cite[\S 4.7]{bhkk}, using $pq \le n$ and $q \ge 3$. So one evaluation of $Q$ costs $\Ostar(2^{|L|})$ time and polynomial space. Signs do not matter, because the field has characteristic two.
+
+\begin{fact}[Schwartz--Zippel]\label{fact:sz}
+If $2^b \ge 24n$, a nonzero $Q$ is nonzero at a uniformly random point with probability at least $3/4$.
+\end{fact}
+
+\begin{lemma}[Amplitude amplification~\cite{bhmt}]\label[lemma]{lem:aa}
+Let $A$ be a unitary with
+\[
+  A|0\rangle = \sqrt{a}\,|\mathrm{good}\rangle + \sqrt{1-a}\,|\mathrm{bad}\rangle,
+\]
+where a flag qubit marks the good part. If $a \ge a_0$ for a known $a_0 > 0$, then $O(1/\sqrt{a_0})$ applications of $A$ and $A^\dagger$ produce a good outcome with probability at least $2/3$, using the randomised iteration counts of~\cite[Theorem~3]{bhmt}. If $a = 0$, no outcome is ever good.
+\end{lemma}
+
+% ===============================================================
+\section{The algorithm}\label{sec:algorithm}
+% ===============================================================
+
+Fix fractions $\beta_1,\beta_2$ (chosen in \cref{sec:analysis}) and set $p_1 = \lfloor \beta_1 p\rfloor$, $p_2 = \lfloor\beta_2 p\rfloor$, $p_0 = p - p_1 - p_2$, $n_1 = \lfloor \delta n \rfloor$ with $\delta = (p_1+2p_2)/(pq)$, and $2^b \ge 24n$. One coherent run $A$ does the following.
+\begin{enumerate}[nosep]
+  \item Prepare a uniform superposition over all $(n_1,n-n_1)$-partitions, as a Dicke state on $n$ qubits~\cite{dicke}.
+  \item Prepare a uniform superposition over evaluation points: one $b$-qubit register for each indeterminate $x_A$, $y_K$, $z_{u,\ell}$. That is $\mathrm{poly}(n,|\F|)$ qubits.
+  \item For each $J \subseteq L$ in turn (an $|L|$-bit counter): compute $R_J$ reversibly, XOR it into an accumulator, and uncompute the workspace. Addition in $\GF(2^b)$ is XOR, so this step is reversible.
+  \item Set the flag $F \gets [\,\text{accumulator} \neq 0\,]$.
+\end{enumerate}
+Each step inside the loop is a polynomial-time classical computation made reversible, so $A$ uses $\Ostar(2^{|L|})$ gates and $\mathrm{poly}(n,|\F|)$ qubits. The algorithm runs amplitude amplification (\cref{lem:aa}) on $A$ with $a_0 = \tfrac34\,P$, where $P$ is the probability of \cref{fact:prob}, and answers ``yes'' if some measured flag is~1.
+
+% ===============================================================
+\section{Analysis}\label{sec:analysis}
+% ===============================================================
+
+\begin{lemma}[Soundness]\label[lemma]{lem:sound}
+If $\F$ has no $p$-packing, the flag is $0$ on every branch.
+\end{lemma}
+\begin{proof}
+Then $\F$ has no $(p_0,p_1,p_2)$-packing for any partition, so $Q$ is the zero polynomial by \cref{fact:sieve}, and every evaluation is zero.
+\end{proof}
+
+\begin{lemma}[Completeness]\label[lemma]{lem:complete}
+If $\F$ has a $p$-packing, the flag is $1$ with probability at least $\tfrac34 P$.
+\end{lemma}
+\begin{proof}
+Measuring the partition and point registers after $A$ gives a uniform partition and an independent uniform point. With probability $P$ a fixed $p$-packing is a $(p_0,p_1,p_2)$-packing (\cref{fact:prob}). Then $Q \ne 0$ (\cref{fact:sieve}), and $Q$ is nonzero at the point with probability at least $3/4$ (\cref{fact:sz}).
+\end{proof}
+
+\noindent
+So the algorithm has one-sided error and runs in time $\Ostar\big(2^{|L|}/\sqrt{P}\big)$. Classically, $\lceil 1/P\rceil$ repetitions give $\Ostar\big(2^{|L|}/P\big)$, which is the bound of~\cite{bhkk}. It remains to choose $\beta_1,\beta_2$.
+
+\begin{lemma}[Optimisation]\label[lemma]{lem:opt}
+Let $w \in \{1, \tfrac12\}$ and $c = 2^{1/w}$, and write $\beta_0 = 1-\beta_1-\beta_2$. As $p\to\infty$, $\frac1p\log_2\big(2^{|L|}/P^{w}\big) \to E_w(\beta)$, where
+\[
+  E_w(\beta) \;=\; q - t - w\Big[H(\beta_0,\beta_1,\beta_2) + \beta_1\log_2 q + \beta_2\log_2\tbinom q2 - qH(t/q)\Big],\qquad t = \beta_1 + 2\beta_2 .
+\]
+The minimum of $E_w$ over the simplex is attained at $\beta_j = \binom qj x^j/Z$ ($j = 0,1,2$), where $x$ is the positive root of
+\[
+  \tbinom{q-1}2 x^2 - (c-1)(q-1)\,x - (c-1) \;=\; 0 ,
+\]
+and its value is $2^{\min E_w} = 2^q\big(Z^{q-1}/W^q\big)^{w}$ with $Z$ and $W$ as in \cref{thm:general}.
+\end{lemma}
+\begin{proof}
+The formula for $E_w$ follows from \cref{fact:prob} and Stirling's formula: $\binom{p}{p_1+p_2}\binom{p_1+p_2}{p_2} = 2^{pH(\beta_0,\beta_1,\beta_2)+O(\log p)}$ and $\binom{pq}{p_1+2p_2} = 2^{pqH(t/q)+O(\log p)}$, while $|L| = p(q - t)$ up to rounding.
+
+\emph{Fixed $t$.} Maximising $G(\beta) = H(\beta_0,\beta_1,\beta_2) + \beta_1\log_2 q + \beta_2\log_2\binom q2$ subject to $\sum_j\beta_j = 1$ and $\beta_1 + 2\beta_2 = t$ is a maximum-entropy problem with a linear constraint. Its unique solution is the Gibbs distribution $\beta_j = \binom qj x^j/Z(x)$ with $Z(x) = \sum_{j\le 2}\binom qj x^j$, where $x > 0$ is fixed by $t = xZ'(x)/Z(x)$, and the maximum is $G^*(t) = \log_2 Z - t\log_2 x$. The map $x \mapsto t$ is increasing, since $t$ is the mean of a Gibbs distribution.
+
+\emph{Optimising $t$.} By the envelope theorem, $\frac{d}{dt}G^* = -\log_2 x$. Also $\frac{d}{dt}\,qH(t/q) = \log_2\frac{q-t}{t}$. Hence
+\[
+  \frac{dE_w}{dt} \;=\; -1 + w\log_2\!\Big(x\,\frac{q-t}{t}\Big).
+\]
+A direct calculation gives $t = qx(1+(q-1)x)/Z$ and $q - t = qW/Z$, so $x(q-t)/t = W/(1+(q-1)x) = 1 + \binom{q-1}2x^2/(1+(q-1)x)$. This is increasing in $x$, hence in $t$, so $E_w$ is convex in $t$. Its derivative goes from $-1$ as $t\to0$ to $+\infty$ as $t$ approaches its maximum. The unique stationary point satisfies $W = c\,(1+(q-1)x)$, which is the stated quadratic.
+
+\emph{Value.} Substitute
+\[
+  w\log_2 x = 1 + w\log_2\frac{t}{q-t},\qquad qH(t/q) = q\log_2 q - t\log_2 t - (q-t)\log_2(q-t).
+\]
+The terms in $t\log_2 t$ cancel, leaving $E_w = q + w\log_2\big(q^q/(Z(q-t)^q)\big)$. With $q - t = qW/Z$ this is $q + w\log_2(Z^{q-1}/W^q)$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:general,thm:main}]
+\Cref{lem:sound,lem:complete,lem:aa} show that the algorithm has one-sided error. Its running time is $\Ostar\big(2^{|L|}/\sqrt P\big)$, and \cref{lem:opt} with $w = \tfrac12$, so $c = 4$, gives $c_q$. For $q = 3$ the quadratic is $x^2 - 6x - 3 = 0$, so $x = 3 + 2\sqrt3$. Here $W = (1+x)^2$ and $Z = (1+x)^3 - x^3$, so
+\[
+  c_3 \;=\; \frac{8Z}{(1+x)^3} \;=\; 8\Big(1 - \Big(\frac{x}{1+x}\Big)^{3}\Big) \;=\; 8\Big(1 - \Big(\frac{\sqrt3}{2}\Big)^{3}\Big) \;=\; 8 - 3\sqrt3 . \qedhere
+\]
+\end{proof}
+
+\noindent
+The same computation with $w = 1$ ($c = 2$) gives $x = 1+\sqrt2$, $x/(1+x) = 1/\sqrt2$ and the classical base $8\big(1-(x/(1+x))^3\big)^2 = 9 - 4\sqrt2$, as claimed in the introduction.
+
+\begin{proof}[Proof of \cref{cor:x3c}]
+An exact cover by 3-sets is a $p$-packing with $p = n/3$. \Cref{fact:prob} allows $pq = n$, with $n_1 = p_1 + 2p_2$, and then the asymptotic form is exact up to polynomial factors. So the bound is $(8-3\sqrt3)^{n/3} = 1.41011\ldots^{\,n}$.
+\end{proof}
+
+\noindent
+Classically the same specialisation gives $(9-4\sqrt2)^{n/3} = 1.4953^n$, the running time of Björklund's exact-cover algorithm~\cite{bjorklundec,bhkk}.
+
+% ===============================================================
+\section{Numerical checks}\label{sec:numerics}
+% ===============================================================
+
+The script \texttt{packing.py} (Python~3, standard library only) checks four things.
+\begin{itemize}[nosep]
+  \item \textbf{Closed form.} \Cref{lem:opt} agrees with a direct grid search over $(\beta_1,\beta_2)$ for $q = 3,\dots,8$, classically and quantumly. The classical values agree with the table in~\cite{bhkk} to within $10^{-4}$ for every listed $q$ from 3 to 500.
+  \item \textbf{\Cref{fact:prob}.} Exhaustive enumeration of all $(n_1,n-n_1)$-partitions reproduces the formula exactly, as integer counts, for $(n,q,p) = (10,3,3)$, $(11,4,2)$, $(12,3,4)$ and $(13,5,2)$ and every $n_1,p_1,p_2$.
+  \item \textbf{Finite $p$.} With exact binomials for perfect packings ($n = pq$), the optimal quantum base for $q = 3$ is $2.8006$, $2.8057$, $2.8052$ and $2.8046$ at $p = 100$, $300$, $1000$ and $3000$, approaching $8 - 3\sqrt3 = 2.8038$. The classical base approaches $9 - 4\sqrt2$ in the same way.
+  \item \textbf{Figure data.} \Cref{fig:bases} plots the bases per covered element for $q \le 30$.
+\end{itemize}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\linewidth, height=6.0cm,
+  xmin=2.5, xmax=30.5, ymin=1.35, ymax=2.05,
+  xtick={3,5,10,15,20,25,30},
+  xlabel={set size $q$},
+  ylabel={base per covered element},
+  ticklabel style={font=\small}, xlabel style={font=\small}, ylabel style={font=\small},
+  yticklabel style={/pgf/number format/fixed,/pgf/number format/precision=2,/pgf/number format/fixed zerofill},
+  grid=major, grid style={gray!18},
+  legend style={at={(0.97,0.05)},anchor=south east,font=\small,draw=gray!40},
+  legend cell align=left,
+]
+\addplot[black!60, dashed, thick, domain=2.5:30.5] {2};
+\addlegendentry{Koutis, $2^{qp}$}
+\addplot[cgray, thick, mark=square*, mark size=1.4pt] table[x=q,y=classical]{figs/bases.dat};
+\addlegendentry{narrow sieve, classical~\cite{bhkk}}
+\addplot[qblue, thick, mark=*, mark size=1.5pt] table[x=q,y=quantum]{figs/bases.dat};
+\addlegendentry{amplified, quantum (this paper)}
+\end{axis}
+\end{tikzpicture}
+\caption{The $q$-th root of the base, so that the bounds read $c^{\,qp}$. The quantum curve stays below the classical one for every $q$, and both approach $2$ as $q$ grows.}
+\label{fig:bases}
+\end{figure}
+
+% ===============================================================
+\section{Limitations}\label{sec:limits}
+% ===============================================================
+
+\begin{enumerate}[nosep]
+  \item \textbf{Novelty.} Searches in November 2026 found no faster randomized classical algorithm for 3-set packing than~\cite{bhkk}, and no quantum algorithm with running time exponential only in~$p$. Amplifying a Monte Carlo algorithm is a standard technique, so the observation may be folklore. Experts should be consulted before any claim of priority.
+  \item \textbf{Reliance on published lemmas.} We use Lemmas 12 and 13 and \S\S 4.5--4.7 of~\cite{bhkk} as published. We checked Lemma 12 by exhaustive enumeration, but we did not implement the sieve itself.
+  \item \textbf{Special cases.} The bound is for general $q$-set packing. Some special cases have faster dedicated algorithms. For example, $q$-dimensional $p$-matching takes $\Ostar(2^{(q-2)p})$ time~\cite[Theorem~5]{bhkk}, with a constant success probability per trial, so there is nothing to amplify.
+  \item \textbf{Exact cover.} We compared \cref{cor:x3c} with Björklund's algorithm and with the quantum algorithms of~\cite{ambainis,gaspersli}, but we did not search the exact-cover literature exhaustively.
+  \item \textbf{A constant in~\cite{bhkk}.} The statement of~\cite[Theorem~2]{bhkk} reads $1.4933^{3p}$. The analysis in~\cite[\S 4.7]{bhkk} and its table give $3.3432^p = 1.4953^{3p}$, which equals $(9-4\sqrt2)^p$ and is the value cited in later work. We compare against that value.
+\end{enumerate}
+
+\paragraph{Cost model.}
+The algorithm needs $\mathrm{poly}(n,|\F|)$ logical qubits and exponential circuit depth, but no QRAM. Like every quantum exponential-time algorithm, it assumes fault-tolerant hardware.
+
+% ===============================================================
+\section*{Contribution and AI-use statement}
+% ===============================================================
+
+Konstantinos Dalkafoukis set the research direction and drove the project. That direction was to use quantum algorithms to beat existing exponential-time bounds, starting from Hamiltonicity, and to extend that result to related problems. The construction, the proofs, the numerical checks and the text were produced by Claude Opus~5.5, an AI model developed by Anthropic, in conversation with Konstantinos Dalkafoukis and under that direction. Konstantinos Dalkafoukis is responsible for the content. Before public posting, the arguments must be checked independently, in particular the points in \cref{sec:limits}.
+
+% ===============================================================
+\begin{thebibliography}{99}
+\bibitem{ambainis} A.~Ambainis, K.~Balodis, J.~Iraids, M.~Kokainis, K.~Pr\={u}sis, J.~Vihrovs. Quantum speedups for exponential-time dynamic programming algorithms. In \emph{Proc.\ SODA}, 2019. \href{https://arxiv.org/abs/1807.05209}{arXiv:1807.05209}.
+\bibitem{bjorklundec} A.~Björklund. Exact covers via determinants. In \emph{Proc.\ STACS}, LIPIcs~5, pages 95--106, 2010.
+\bibitem{bhkk} A.~Björklund, T.~Husfeldt, P.~Kaski, M.~Koivisto. Narrow sieves for parameterized paths and packings. \emph{J.\ Comput.\ Syst.\ Sci.} 87, 2017. \href{https://arxiv.org/abs/1007.1161}{arXiv:1007.1161}.
+\bibitem{bhmt} G.~Brassard, P.~H{\o}yer, M.~Mosca, A.~Tapp. Quantum amplitude amplification and estimation. \emph{Contemp.\ Math.} 305, 2002. \href{https://arxiv.org/abs/quant-ph/0005055}{arXiv:quant-ph/0005055}.
+\bibitem{dicke} A.~B{\"a}rtschi, S.~Eidenbenz. Deterministic preparation of Dicke states. In \emph{Proc.\ FCT}, 2019.
+\bibitem{hamilton} K.~Dalkafoukis, Claude Opus~5.5. Amplifying determinant sums: a quantum algorithm for undirected Hamiltonicity in $\Ostar\big((8/3)^{n/2}\big)$ time. Draft, 2026. \url{https://github.com/kdalkafoukis/vibe-researching-with-ai/tree/main/papers/quantum-hamiltonicity}.
+\bibitem{gaspersli} S.~Gaspers, J.~Z.~Li. Quantum algorithms for graph coloring and other partitioning, covering, and packing problems. In \emph{Proc.\ ICALP}, 2024. \href{https://arxiv.org/abs/2311.08042}{arXiv:2311.08042}.
+\bibitem{zehavi15} M.~Zehavi. Parameterized approximation algorithms for packing problems. 2015. \href{https://arxiv.org/abs/1505.00709}{arXiv:1505.00709}.
+\bibitem{zehavi23} M.~Zehavi. Forgetfulness can make you faster: an $\Ostar(8.097^k)$-time algorithm for weighted 3-set $k$-packing. ACM, 2023. \href{https://doi.org/10.1145/3599722}{doi:10.1145/3599722}.
+\end{thebibliography}
+\noindent{\small The publication details of~\cite{dicke} and~\cite{zehavi15}, and the author list and venue of~\cite{zehavi23}, were not fully verified and should be checked.}
+
+\end{document}
