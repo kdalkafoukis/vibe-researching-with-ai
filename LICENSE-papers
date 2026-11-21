@@ -1,0 +1,19 @@
+Copyright (c) 2026 Konstantinos Dalkafoukis
+
+The papers in this repository are licensed under the Creative Commons
+Attribution 4.0 International License (CC BY 4.0). This covers the LaTeX
+sources, PDFs, figures, figure data and README text.
+
+Full legal text: https://creativecommons.org/licenses/by/4.0/legalcode
+Summary:         https://creativecommons.org/licenses/by/4.0/
+
+You may share and adapt this material for any purpose, including
+commercially, as long as you give appropriate credit, link to the license
+and indicate whether changes were made.
+
+Suggested attribution: K. Dalkafoukis and Claude Opus 5.5 (Anthropic),
+<paper title>, draft, 2026,
+https://github.com/kdalkafoukis/vibe-researching-with-ai
+
+The code (all *.py files) is licensed separately under the MIT License;
+see LICENSE.

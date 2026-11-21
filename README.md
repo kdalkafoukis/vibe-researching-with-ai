@@ -20,3 +20,8 @@ The best classical algorithms for both problems repeat a cheap random test that 
 ## Status
 
 Both bounds are proved analytically from published lemmas, and the scripts only cross-check them. Two questions are still open: novelty (amplifying a Monte Carlo algorithm is standard, so experts may already know these results) and independent review.
+
+## License
+
+- **Papers** (LaTeX sources, PDFs, figures, data and text): [CC BY 4.0](LICENSE-papers). Please credit the authors when reusing them.
+- **Code** (all `*.py` files): [MIT](LICENSE).
