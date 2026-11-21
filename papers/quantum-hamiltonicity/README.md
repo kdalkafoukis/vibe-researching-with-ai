@@ -50,7 +50,7 @@ Because rare successes are cheaper quantumly, the best cutoff moves from 0.207n 
 
 ## Status
 
-The bound is **proved analytically** from published lemmas: Björklund's Lemmas 9–11 and Lemma 7 of the narrow-sieve paper. The scripts only cross-check it. `bjorklund_check.py` runs Björklund's test end to end on small graphs. In all 2,560 cases it matched his closed formula, never gave a false positive and never missed a cycle. On single-cycle graphs it fires on exactly the fraction of partitions that the paper's formula predicts.
+The bound is **proved analytically** from published lemmas: Björklund's Lemmas 9–11 and Lemma 7 of the narrow-sieve paper. The scripts only cross-check it. `bjorklund_check.py` runs Björklund's test end to end on small graphs. In all 2,560 cases it matched his closed formula, never gave a false positive and never missed a cycle. On single-cycle graphs it fires on exactly the fraction of partitions that the paper's formula predicts. `bjorklund_check.cpp` is a C++ port. It reproduces those 2,560 results bit for bit in about a second. It then runs 16,128 more cases on graphs with 10 and 12 vertices, including the Petersen graph, with the same outcome.
 
 Still open:
 - **Novelty.** Amplifying a Monte Carlo algorithm is a standard technique, so experts may already know this.
@@ -66,5 +66,6 @@ Still open:
 | k-path exponents | `python3 kpath.py` | NumPy, SciPy |
 | Figure data in `figs/` | `python3 make_data.py` | Python 3 |
 | Björklund's test end to end on small graphs (about 4 min) | `python3 bjorklund_check.py` | Python 3 |
+| The same in C++, plus graphs with 10 and 12 vertices (about 1.5 min on 10 cores) | `clang++ -O3 -std=c++17 -pthread bjorklund_check.cpp -o bjorklund_check && ./bjorklund_check` | A C++17 compiler |
 
 `kpath.py`'s exact check at k = 30,000 takes several minutes. Set `\arxivtrue` at the top of `paper.tex` for the arXiv-compliant author line, which credits the model in a footnote instead of as an author.

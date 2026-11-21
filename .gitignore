@@ -9,3 +9,6 @@
 *.synctex.gz
 __pycache__/
 .DS_Store
+
+# compiled C++ checks
+papers/quantum-hamiltonicity/bjorklund_check
