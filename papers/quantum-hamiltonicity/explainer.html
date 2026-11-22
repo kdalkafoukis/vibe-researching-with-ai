@@ -1,0 +1,1239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hamiltonicity in 1.633ⁿ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+[hidden]{display:none!important}
+img{max-width:100%}
+/* Layout: one reading column (~66ch) runs down the page as a numbered sequence of steps; each step ends in a wider instrument panel (max 1000px) where the idea can be played with. Colours follow the paper's figures: grey = classical, blue = quantum, red = direct arcs. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --ink:#131821; --muted:#566172; --rule:#d7dce4; --soft:#e9edf3; --edge:#b4bcc8;
+  --quantum:#2563eb; --on-q:#ffffff; --classical:#737373; --direct:#dc2626; --good:#15803d;
+  --q-tint:#e1eafd; --d-tint:#fbe3e3; --c-tint:#e6e6e6; --v2seg:#cdd4de;
+  --f-display:"STIX Two Text","STIX Two","Times New Roman",serif;
+  --f-body:"Source Sans 3","Source Sans Pro","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1117; --surface:#151b23; --ink:#e6e9ef; --muted:#9aa4b4; --rule:#29313d; --soft:#1c232d; --edge:#465061;
+    --quantum:#6e9dff; --on-q:#0d1117; --classical:#a6a6a6; --direct:#f87171; --good:#4ade80;
+    --q-tint:#172440; --d-tint:#3b1c20; --c-tint:#2a2e35; --v2seg:#38414f; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1117; --surface:#151b23; --ink:#e6e9ef; --muted:#9aa4b4; --rule:#29313d; --soft:#1c232d; --edge:#465061;
+  --quantum:#6e9dff; --on-q:#0d1117; --classical:#a6a6a6; --direct:#f87171; --good:#4ade80;
+  --q-tint:#172440; --d-tint:#3b1c20; --c-tint:#2a2e35; --v2seg:#38414f; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px;
+  -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.12;text-wrap:balance;margin:0}
+p{margin:0}
+a{color:var(--quantum)}
+sub,sup{line-height:0}
+.v{font-family:var(--f-display);font-style:italic}
+.prose{max-width:66ch;display:grid;gap:14px}
+.prose h3{font-size:24px;margin-top:8px}
+.prose ol,.prose ul{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.note{font-size:14px;color:var(--muted);line-height:1.5}
+.mono,.readout{font-family:var(--f-mono);font-size:13.5px;font-variant-numeric:tabular-nums}
+
+/* hero */
+.hero{max-width:1000px;margin:0 auto;padding-block:52px 36px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:40px;align-items:center}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hero h1{font-size:clamp(42px,7.4vw,72px);letter-spacing:-.012em;margin-top:12px}
+.hero h1 .b{color:var(--quantum);white-space:nowrap}
+.hero h1 sup{font-style:italic;font-size:.55em;vertical-align:.9em;margin-left:.04em}
+.lede{font-size:19px;margin-top:18px;max-width:56ch}
+.bases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:26px}
+.bc{border-top:2px solid var(--classical);padding-top:8px;display:grid;gap:2px}
+.bc.q{border-color:var(--quantum)}
+.bc b{font-family:var(--f-display);font-size:30px;font-weight:600;line-height:1.1}
+.bc.q b{color:var(--quantum)}
+.bc b sup{font-style:italic;font-size:.6em;vertical-align:.7em}
+.bc span{font-size:14px;color:var(--muted);line-height:1.4}
+.hero .note{margin-top:20px}
+.hero-fig{margin:0;display:grid;gap:8px;justify-items:center}
+.hero-fig svg{max-width:280px}
+.hero-fig figcaption{font-size:14px;color:var(--muted);text-align:center;max-width:34ch;line-height:1.45}
+@media (max-width:760px){.hero{grid-template-columns:1fr;gap:28px}}
+@media (max-width:520px){.bases{grid-template-columns:1fr}}
+
+.toc{max-width:1000px;margin:0 auto;display:flex;flex-wrap:wrap;gap:6px 20px;font-size:15px;padding-block:14px;border-top:1px solid var(--rule)}
+.toc a{color:var(--ink);text-decoration:none;white-space:nowrap}
+.toc a:hover{color:var(--quantum)}
+.toc a span{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-right:6px}
+
+/* steps */
+.step{max-width:1000px;margin:0 auto;padding-block:56px 8px;border-top:1px solid var(--rule);display:grid;gap:20px}
+.step-head{display:grid;gap:6px}
+.step-no{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--quantum)}
+.step h2{font-size:clamp(28px,4.2vw,40px)}
+.panel{margin:0;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:20px;display:grid;gap:16px;min-width:0}
+.panel-title,.mini-title{font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+.cols > *{min-width:0}
+.side{display:grid;gap:14px;align-content:start}
+@media (max-width:760px){.cols{grid-template-columns:1fr}}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:inherit;font-size:15px;line-height:1.2;padding:8px 13px;border-radius:8px;border:1px solid var(--rule);background:var(--soft);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--quantum);border-color:var(--quantum);color:var(--on-q)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:focus-visible,.seg button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible,a:focus-visible{outline:2px solid var(--quantum);outline-offset:2px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{font:inherit;font-size:14.5px;padding:7px 12px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.seg button + button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.slider{display:grid;gap:4px;font-size:15px;color:var(--muted)}
+.slider b{color:var(--ink);font-family:var(--f-mono);font-weight:500}
+.slider input{width:100%;accent-color:var(--quantum)}
+.grow{flex:1 1 260px}
+.check{display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)}
+.check input{accent-color:var(--quantum);width:17px;height:17px}
+select{font:inherit;font-size:15px;padding:6px 8px;border-radius:8px;border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
+.status{font-size:15.5px;line-height:1.5;min-height:3em}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;margin:0;font-size:15px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-family:var(--f-mono);font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
+svg{display:block;width:100%;height:auto;max-width:100%}
+svg text{font-family:var(--f-mono);font-size:12px;fill:var(--muted)}
+.chart-wrap{overflow-x:auto}
+.chart-wrap svg{min-width:540px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--muted);align-items:center}
+.legend i{display:inline-block;vertical-align:middle;margin-right:6px}
+.lg-v1{width:12px;height:12px;border-radius:50%;background:var(--ink)}
+.lg-v2{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink)}
+.lg-d{width:22px;height:4px;background:var(--direct);border-radius:2px}
+.lg-e{width:22px;height:3px;background:var(--edge);border-radius:2px}
+.lg-c{width:22px;height:1.5px;background:var(--edge);opacity:.8}
+
+/* step 1 */
+.pz-edge{stroke:var(--edge);stroke-width:3;stroke-linecap:round}
+.pz-edge.on{stroke:var(--quantum);stroke-width:6}
+.pz-v{fill:var(--surface);stroke:var(--muted);stroke-width:2;cursor:pointer;transition:fill .15s}
+.pz-v.free{stroke:var(--quantum);stroke-width:3;fill:var(--q-tint)}
+.pz-v.visited{fill:var(--quantum);stroke:var(--quantum)}
+.pz-v.start{stroke:var(--ink);stroke-width:3}
+.pz-v.end{stroke:var(--ink);stroke-width:4}
+.pz-v:focus{outline:none}
+.pz-v:focus-visible{stroke:var(--ink);stroke-width:4}
+#pz-svg{max-width:420px;margin:0 auto;touch-action:manipulation}
+.pz-count{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+
+/* step 2 */
+.grid{stroke:var(--soft);stroke-width:1}
+.ln{fill:none;stroke-width:2.2;stroke-linejoin:round}
+.ln.c{stroke:var(--classical)} .ln.q{stroke:var(--quantum)} .ln.main{stroke-width:3.6}
+.lbl.c{fill:var(--classical)} .lbl.q{fill:var(--quantum)} .lbl.strong{font-weight:600}
+.cursor{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
+.dot.c{fill:var(--classical)} .dot.q{fill:var(--quantum)}
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:15px;min-width:520px}
+.tbl th{font-family:var(--f-mono);font-size:12px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule)}
+.tbl td{padding:7px 8px;border-bottom:1px solid var(--soft);vertical-align:top}
+.tbl td.n{font-family:var(--f-mono);font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tr.main td{font-weight:600}
+.tbl .sub{display:block;font-size:13px;color:var(--muted);font-weight:400}
+.sw{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:8px}
+.sw.c{background:var(--classical)} .sw.q{background:var(--quantum)}
+.sw.dash{background:none;border-top:3px dotted currentColor;height:0}
+.sw.dash.c{color:var(--classical)} .sw.dash.q{color:var(--quantum)}
+.bars{display:grid;gap:8px}
+.brow{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) 3.5em;gap:10px;align-items:center;font-size:15px}
+.brow .track{height:14px;background:var(--soft);border-radius:4px;overflow:hidden}
+.brow .fill{height:100%;border-radius:4px}
+.brow .fill.c{background:var(--classical)} .brow .fill.q{background:var(--quantum)}
+.brow b{font-family:var(--f-mono);font-weight:500;font-size:14px;text-align:right}
+.brow.main{font-weight:600}
+@media (max-width:520px){.brow{grid-template-columns:minmax(0,1fr) 3em}.brow .track{grid-column:1 / -1;grid-row:2}}
+
+/* step 3 */
+.sv-wrap{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:760px){.sv-wrap{grid-template-columns:1fr}}
+#sv-svg{max-width:240px;touch-action:manipulation}
+.sv-edge{stroke:var(--edge);stroke-width:3;transition:opacity .2s}
+.sv-edge.on{stroke:var(--quantum);stroke-width:5}
+.sv-edge.in{stroke:var(--ink)}
+.sv-gap{stroke:var(--edge);stroke-width:1.5;stroke-dasharray:3 5}
+#sv-svg.walk .sv-gap{opacity:0}
+.sv-edge.out,.sv-gap.out{opacity:.18}
+.sv-hit{stroke:transparent;stroke-width:16;fill:none}
+#sv-svg.edit .sv-hit{cursor:pointer}
+#sv-svg.walk .sv-hit{pointer-events:none}
+.sv-hit:focus{outline:none}
+.sv-hit:focus-visible{stroke:var(--q-tint)}
+.sv-v{fill:var(--surface);stroke:var(--ink);stroke-width:2;transition:opacity .2s}
+#sv-svg.walk .sv-v{cursor:pointer}
+.sv-v.on{fill:var(--q-tint);stroke:var(--quantum)}
+.sv-v.free{stroke:var(--quantum);stroke-width:3.5}
+.sv-v.out{opacity:.25}
+.sv-v:focus{outline:none}
+.sv-v:focus-visible{stroke:var(--ink);stroke-width:4}
+.sv-vt{fill:var(--ink);font-size:13px;font-weight:500;pointer-events:none}
+.sv-token{fill:var(--quantum);transition:transform .42s ease;pointer-events:none}
+@media (prefers-reduced-motion: reduce){.sv-token{transition:none}}
+.sv-speed{max-width:260px}
+.walks{display:grid;gap:6px}
+.walks .btn{text-align:left;font-size:14.5px}
+.total-box{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;border-top:1px solid var(--rule);padding-top:10px}
+.total-box span{font-size:14px;color:var(--muted)}
+.total-box b{font-family:var(--f-display);font-size:36px;font-weight:600;font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.tcol{display:flex;flex-direction:column;gap:4px;min-width:0}
+.tcol h4{font-family:var(--f-mono);font-size:11px;font-weight:500;color:var(--muted);margin:0 0 2px;text-align:center;line-height:1.3}
+.tile{position:relative;width:100%;border:1px solid var(--rule);border-radius:6px;padding:3px 2px;font-family:var(--f-mono);font-size:11.5px;line-height:1.25;text-align:center;background:var(--surface);color:var(--muted);cursor:pointer;transition:background .2s,opacity .2s}
+.tile:hover{border-color:var(--muted)}
+.tile:focus-visible{outline:2px solid var(--quantum);outline-offset:1px}
+.tile span{display:block}
+.tile b{display:block;font-weight:500;color:var(--ink);font-size:12px;letter-spacing:.02em;overflow-wrap:anywhere}
+.tile.done.plus{background:var(--q-tint)} .tile.done.minus{background:var(--d-tint)} .tile.done.zero{background:var(--soft)}
+.tile.dim{opacity:.32}
+.tile.hit{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.tile.sel{border-color:var(--quantum);box-shadow:inset 0 0 0 2px var(--quantum)}
+.tile .badge{font-weight:600;color:var(--ink)}
+.tile .badge:empty{display:none}
+
+/* step 4 */
+.cp-edge{stroke:var(--edge);stroke-width:2;stroke-dasharray:2 4}
+.cp-arc{fill:none;stroke:var(--ink);stroke-width:2.6}
+.cp-arc.f{stroke:var(--quantum);stroke-width:3.2}
+.mk-ink{fill:var(--ink)} .mk-q{fill:var(--quantum)}
+.cp-v{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.cp-v.s{fill:var(--ink)}
+.cp-vt{fill:var(--ink);font-size:13px;font-weight:500}
+.cp-vt.s{fill:var(--bg)}
+.cp-lab rect{fill:var(--d-tint);stroke:var(--direct);stroke-width:1.2}
+.cp-lab text{fill:var(--direct);font-size:12px;font-weight:600}
+#cp-svg{max-width:400px;margin:0 auto}
+.weights{display:grid;gap:4px;margin:0}
+.weights dt{font-size:13px;color:var(--muted);font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.05em}
+.weights dd{margin:0 0 6px;font-family:var(--f-display);font-size:18px;overflow-wrap:anywhere}
+.verdict{display:inline-block;font-family:var(--f-mono);font-size:12.5px;padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:middle}
+.verdict.same{background:var(--q-tint);color:var(--quantum)} .verdict.diff{background:var(--d-tint);color:var(--direct)}
+
+/* step 5 */
+.ring-edge{stroke:var(--edge);stroke-width:3}
+.ring-edge.direct{stroke:var(--direct);stroke-width:5.5}
+.ring-chord{stroke:var(--edge);stroke-width:1.3;opacity:.6}
+.v1{fill:var(--ink)} .v2{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.lbl{font-size:10.5px}
+#ns-svg{max-width:330px;margin:0 auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:26px;padding:0 7px;border-radius:13px;font-family:var(--f-mono);font-size:12.5px;border:1.5px solid var(--ink);color:var(--ink);background:var(--surface)}
+.chip.d{border-color:var(--direct);color:var(--direct);background:var(--d-tint)}
+.bar{fill:var(--c-tint)} .bar.in{fill:var(--quantum);opacity:.85}
+.exact{stroke:var(--ink);stroke-width:2.5}
+.cutline{stroke:var(--quantum);stroke-width:1.5;stroke-dasharray:4 3}
+.big{font-family:var(--f-display);font-size:22px;font-weight:600}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:12.5px;padding:2px 8px;border-radius:10px}
+.tag.yes{background:var(--q-tint);color:var(--quantum)} .tag.no{background:var(--d-tint);color:var(--direct)}
+
+/* step 6 */
+.am-arc{fill:none;stroke:var(--rule);stroke-width:1.5}
+.am-axis{stroke:var(--muted);stroke-width:1.5}
+.am-start{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 4}
+.am-mirror{stroke:var(--ink);stroke-width:2.5;opacity:.25}
+.am-vec{stroke:var(--quantum);stroke-width:3.5;stroke-linecap:round}
+.am-tip{fill:var(--quantum)}
+.am-ghost{stroke:var(--quantum);stroke-width:1.5;opacity:.3}
+.am-bar-bg{fill:var(--soft)} .am-bar{fill:var(--quantum)}
+.strip{display:flex;flex-wrap:wrap;gap:3px;min-height:20px;align-content:flex-start}
+.strip i{width:9px;height:9px;border-radius:2px;background:var(--c-tint)}
+.strip i.hit{background:var(--quantum)}
+.strip span{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-right:4px}
+
+/* step 7 */
+.curve{fill:none;stroke-width:3}
+.curve.c{stroke:var(--classical)} .curve.q{stroke:var(--quantum)}
+.minpt.c{fill:var(--classical)} .minpt.q{fill:var(--quantum)}
+.stack{display:grid;gap:10px}
+.srow{display:grid;grid-template-columns:150px minmax(0,1fr) 120px;gap:12px;align-items:center;font-size:15px}
+.srow .strack{display:flex;height:28px;border-radius:5px;overflow:hidden;background:var(--soft)}
+.sg{height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;transition:width .15s}
+.sg.all{background:var(--v2seg)} .sg.v2{background:var(--v2seg)} .sg.d{background:var(--d-tint);box-shadow:inset 2px 0 0 var(--direct)}
+.sg.rc{background:var(--c-tint);box-shadow:inset 2px 0 0 var(--classical)} .sg.rq{background:var(--q-tint);box-shadow:inset 2px 0 0 var(--quantum)}
+.srow b{font-family:var(--f-mono);font-weight:500;font-size:14px;text-align:right}
+.srow.q b{color:var(--quantum)}
+.slegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13.5px;color:var(--muted)}
+.slegend i{display:inline-block;width:14px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px}
+@media (max-width:620px){.srow{grid-template-columns:minmax(0,1fr) auto}.srow .strack{grid-column:1 / -1;grid-row:2}}
+.dbar.both{fill:var(--quantum);opacity:.8} .dbar.conly{fill:var(--classical);opacity:.8} .dbar.none{fill:var(--c-tint)}
+.thr{stroke-width:1.5;stroke-dasharray:5 4}
+.thr.c{stroke:var(--classical)} .thr.q{stroke:var(--quantum)}
+.algo{counter-reset:a;list-style:none;padding:0;display:grid;gap:10px}
+.algo li{counter-increment:a;display:grid;grid-template-columns:2em minmax(0,1fr);gap:8px}
+.algo li::before{content:counter(a);font-family:var(--f-mono);font-size:13px;color:var(--quantum);border:1.5px solid var(--quantum);border-radius:50%;width:1.7em;height:1.7em;display:grid;place-items:center;margin-top:2px}
+
+/* step 8 */
+.quiz{display:grid;gap:22px}
+.qz{display:grid;gap:8px}
+.qz p.qq{font-weight:600}
+.qz .opts{display:grid;gap:6px}
+.opt{font:inherit;font-size:15.5px;text-align:left;padding:9px 12px;border-radius:8px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);cursor:pointer}
+.opt:hover{border-color:var(--muted)}
+.opt.right{border-color:var(--good);box-shadow:inset 3px 0 0 var(--good)}
+.opt.wrong{border-color:var(--direct);box-shadow:inset 3px 0 0 var(--direct)}
+.opt:focus-visible{outline:2px solid var(--quantum);outline-offset:2px}
+.qz .why{font-size:15px;color:var(--muted)}
+.score{font-family:var(--f-mono);font-size:14px;color:var(--muted)}
+
+footer{max-width:1000px;margin:48px auto 0;padding-top:16px;border-top:1px solid var(--rule);font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div>
+    <div class="eyebrow">A hands-on guide to the paper “Amplifying Determinant Sums”</div>
+    <h1>Hamiltonicity in <span class="b">1.633<sup>n</sup></span></h1>
+    <p class="lede">How a quantum computer could decide whether a graph has a Hamiltonian cycle in about 1.633<sup class="v">n</sup> steps, below the best classical algorithm. Nine steps, each with something to play with.</p>
+    <div class="bases">
+      <div class="bc"><b>2<sup>n</sup></b><span>Bellman, Held and Karp, 1962. The textbook bound for fifty years.</span></div>
+      <div class="bc"><b>1.657<sup>n</sup></b><span>Björklund, 2010. Determinant sums with a random split.</span></div>
+      <div class="bc q"><b>1.633<sup>n</sup></b><span>This paper. Björklund’s test plus amplitude amplification.</span></div>
+    </div>
+    <p class="note">The paper is a draft and has not been peer reviewed. Everything on this page runs live in your browser.</p>
+  </div>
+  <figure class="hero-fig">
+    <svg id="hero-ring" viewBox="0 0 260 260" role="img" aria-label="A Hamiltonian cycle on 16 vertices under a random split into two halves"></svg>
+    <figcaption>One Hamiltonian cycle on 16 vertices with a fresh random split every few seconds. Red arcs join two filled vertices. Right now there are <b id="hero-m">0</b>. Step 5 explains why that number matters.</figcaption>
+  </figure>
+</header>
+
+<nav class="toc" aria-label="Steps">
+  <a href="#puzzle"><span>1</span>The puzzle</a>
+  <a href="#growth"><span>2</span>How fast is fast</a>
+  <a href="#sieve"><span>3</span>A normal sieve</a>
+  <a href="#pairs"><span>4</span>Cancelling in pairs</a>
+  <a href="#narrow"><span>5</span>The narrow sieve</a>
+  <a href="#amplify"><span>6</span>Repeat or amplify</a>
+  <a href="#cutoff"><span>7</span>Moving the cutoff</a>
+  <a href="#quiz"><span>8</span>Check yourself</a>
+  <a href="#status"><span>9</span>What is proved</a>
+</nav>
+
+<main>
+<!-- ============ STEP 1 ============ -->
+<section class="step" id="puzzle">
+  <div class="step-head"><span class="step-no">Step 1</span><h2>The puzzle</h2></div>
+  <div class="prose">
+    <p>A <b>Hamiltonian cycle</b> visits every vertex of a graph exactly once and returns to where it started. A <b>Hamiltonian path</b> does the same without returning. Deciding whether one exists is NP-complete, so nobody expects an algorithm that is fast on every graph. The real question is how slowly the best algorithm grows as the graph gets bigger.</p>
+    <p>Try it by hand first. Click a vertex to start, then click neighbours one at a time.</p>
+  </div>
+  <figure class="panel">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Graph" id="pz-graphs">
+        <button type="button" data-g="dodeca" aria-pressed="true">Dodecahedron</button><button type="button" data-g="cube" aria-pressed="false">Cube</button><button type="button" data-g="petersen" aria-pressed="false">Petersen</button>
+      </div>
+      <div class="seg" role="group" aria-label="Goal" id="pz-modes">
+        <button type="button" data-mode="cycle" aria-pressed="true">Find a cycle</button><button type="button" data-mode="path" aria-pressed="false">Find a path</button>
+      </div>
+    </div>
+    <div class="cols">
+      <svg id="pz-svg" viewBox="0 0 300 300" role="img" aria-label="Graph puzzle. Vertices are buttons."></svg>
+      <div class="side">
+        <p id="pz-note"></p>
+        <p class="pz-count" id="pz-count"></p>
+        <p class="status" id="pz-status" aria-live="polite"></p>
+        <div class="controls">
+          <button type="button" class="btn" id="pz-undo">Step back</button>
+          <button type="button" class="btn" id="pz-reset">Start over</button>
+          <button type="button" class="btn primary" id="pz-solve">Show a solution</button>
+        </div>
+        <p class="readout" id="pz-brute"></p>
+      </div>
+    </div>
+  </figure>
+  <div class="prose">
+    <p>Paths and cycles are the same problem in disguise. Add one new vertex joined to every other vertex. The new graph has a Hamiltonian cycle exactly when the old one has a Hamiltonian path. So the rest of this page talks about cycles.</p>
+  </div>
+</section>
+
+<!-- ============ STEP 2 ============ -->
+<section class="step" id="growth">
+  <div class="step-head"><span class="step-no">Step 2</span><h2>How fast is fast</h2></div>
+  <div class="prose">
+    <p>Every exact algorithm for this problem takes exponential time. What separates them is the <b>base</b> of the exponential: 2<sup class="v">n</sup>, 1.657<sup class="v">n</sup>, 1.633<sup class="v">n</sup>. The chart counts steps and ignores polynomial factors, which is what the O* notation in the paper does.</p>
+    <p>Dotted lines are brute force: try every ordering of the vertices, or search those orderings with Grover’s quantum search. Both lose to plain 2<sup class="v">n</sup> almost at once.</p>
+  </div>
+  <figure class="panel">
+    <div class="panel-title">Steps needed, log scale</div>
+    <div class="chart-wrap"><svg id="race-svg" viewBox="0 0 680 330" role="img" aria-label="Number of steps against number of vertices for six algorithms"></svg></div>
+    <label class="slider" for="race-n">Number of vertices <b id="race-n-out">60</b><input type="range" id="race-n" min="10" max="150" value="60"></label>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Algorithm</th><th>Steps</th><th>At 10<sup>12</sup> steps a second</th></tr></thead><tbody id="race-body"></tbody></table></div>
+    <p class="readout" id="race-ratio"></p>
+  </figure>
+  <figure class="panel">
+    <div class="panel-title">Largest graph you could handle with a fixed number of steps</div>
+    <div class="controls"><label for="race-budget" class="note">Budget</label>
+      <select id="race-budget"><option value="12">10¹² steps (a second on a fast machine)</option><option value="15">10¹⁵ steps</option><option value="18" selected>10¹⁸ steps (a day on a supercomputer)</option><option value="21">10²¹ steps</option></select>
+    </div>
+    <div class="bars" id="budget-bars"></div>
+  </figure>
+  <div class="prose">
+    <p>The step from 1.657 to 1.633 looks tiny, and in practice it buys a few vertices. It compounds, though. The ratio (1.657/1.633)<sup class="v">n</sup> is about 4 at <span class="v">n</span> = 100 and about 80 at <span class="v">n</span> = 300. In complexity theory, any drop in the base counts, because nobody had a general-graph algorithm, classical or quantum, below 1.657 at all.</p>
+  </div>
+</section>
+
+<!-- ============ STEP 3 ============ -->
+<section class="step" id="sieve">
+  <div class="step-head"><span class="step-no">Step 3</span><h2>A normal sieve</h2></div>
+  <div class="prose">
+    <p>Searching for a Hamiltonian cycle is hard. <b>Counting</b> things that include all the Hamiltonian cycles can be easy, if you can make everything else cancel. That is the idea of a sieve, also called inclusion–exclusion.</p>
+    <p>Closed walks of length <span class="v">n</span> are easy to count: raise the adjacency matrix to the power <span class="v">n</span> and add up the diagonal. Some of these walks visit every vertex. Those are exactly the Hamiltonian cycles, counted once for each starting point and direction. The others repeat a vertex and miss another.</p>
+    <p>To keep only the walks that visit everything, count walks inside every subset of the vertices. Add the count when an even number of vertices was left out and subtract it when an odd number was. You are in control here. Play the sieve or add one tile at a time. Draw your own walk to see where it gets counted. Click a tile to see what it holds. Or edit the graph and predict the total before you press Play.</p>
+  </div>
+  <figure class="panel">
+    <div class="controls">
+      <button type="button" class="btn primary" id="sv-play">Play</button>
+      <button type="button" class="btn" id="sv-step">Add one tile</button>
+      <button type="button" class="btn" id="sv-finish">Add the rest</button>
+      <button type="button" class="btn" id="sv-reset">Reset</button>
+      <label class="slider grow sv-speed" for="sv-speed">Speed<input type="range" id="sv-speed" min="0" max="100" value="50"></label>
+    </div>
+    <div class="sv-wrap">
+      <div class="side">
+        <div class="seg" role="group" aria-label="What clicking the graph does" id="sv-modes"><button type="button" data-m="walk" aria-pressed="true">Draw a walk</button><button type="button" data-m="edit" aria-pressed="false">Edit edges</button></div>
+        <svg id="sv-svg" class="walk" viewBox="0 0 220 220" role="img" aria-label="A five-vertex graph. In walk mode the vertices are buttons; in edit mode the edges are."></svg>
+        <p class="note" id="sv-hint"></p>
+        <div class="mini-title">Or pick a ready-made walk of length 5</div>
+        <div class="walks" id="sv-walks"></div>
+        <div class="total-box"><span id="sv-total-label">Running total</span><b id="sv-total">0</b><span id="sv-prog"></span></div>
+        <p class="status" id="sv-msg" aria-live="polite">Press Play to run the sieve, or click a vertex to start drawing a walk.</p>
+      </div>
+      <div class="side">
+        <div class="tiles" id="sv-tiles"></div>
+        <p class="note">Each tile is one subset of the vertices. Its number is the count of closed walks of length 5 that stay inside the subset, with its sign. Click a tile to see what it counts.</p>
+      </div>
+    </div>
+  </figure>
+  <div class="prose">
+    <p>That is the normal sieve, known since the late 1970s (Kohn, Gottlieb and Kohn; Karp; Bax). It has 2<sup class="v">n</sup> terms, each one easy, and it needs only a little memory. Its running time matches the 2<sup class="v">n</sup> of dynamic programming. To go below 2<sup class="v">n</sup>, you need a sieve with fewer terms.</p>
+  </div>
+</section>
+
+<!-- ============ STEP 4 ============ -->
+<section class="step" id="pairs">
+  <div class="step-head"><span class="step-no">Step 4</span><h2>Cancelling in pairs</h2></div>
+  <div class="prose">
+    <p>Björklund’s first idea is to replace walks with <b>cycle covers</b>. A cycle cover picks one outgoing arc at every vertex so that every vertex is also entered exactly once. The result is a set of separate cycles that together cover the whole graph. A Hamiltonian cycle is a cycle cover with a single cycle.</p>
+    <p>Adding up all cycle covers is easy: it is a determinant, which takes polynomial time. So Björklund gives every edge a random number as its weight and arranges for every cover with more than one cycle to meet a twin of exactly the same weight. He does the arithmetic in a number system where 1 + 1 = 0, as in XOR, so each pair of twins adds up to zero. Pick a vertex <span class="v">s</span>. The twin is made by reversing a cycle that avoids <span class="v">s</span>.</p>
+  </div>
+  <figure class="panel">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Example" id="cp-scenes">
+        <button type="button" data-s="two" aria-pressed="true">Two cycles</button><button type="button" data-s="ham" aria-pressed="false">A Hamiltonian cycle</button><button type="button" data-s="tc" aria-pressed="false">A 2-cycle</button>
+      </div>
+    </div>
+    <div class="cols">
+      <svg id="cp-svg" viewBox="0 0 320 300" role="img" aria-label="A cycle cover on six vertices"></svg>
+      <div class="side">
+        <div class="controls">
+          <button type="button" class="btn primary" id="cp-flip">Flip</button>
+          <button type="button" class="btn" id="cp-labels" aria-pressed="false" hidden>Add labels</button>
+        </div>
+        <dl class="weights">
+          <dt>Weight of this cover</dt><dd id="cp-w0"></dd>
+          <dt>Weight after the flip</dt><dd id="cp-w1">–</dd>
+        </dl>
+        <p class="status" id="cp-msg" aria-live="polite"></p>
+      </div>
+    </div>
+    <p class="note">An edge away from <span class="v">s</span> has one random number for both directions, so x<sub>23</sub> means the same thing going 2→3 or 3→2. The two edges at <span class="v">s</span> get a separate number for each direction. Grey dotted lines are edges of the graph that this cover does not use.</p>
+  </figure>
+  <div class="prose">
+    <p>Labels fix the 2-cycles, but now every label must be used exactly once, and checking that takes a sieve. Step 5 is about keeping that sieve small.</p>
+  </div>
+</section>
+
+<!-- ============ STEP 5 ============ -->
+<section class="step" id="narrow">
+  <div class="step-head"><span class="step-no">Step 5</span><h2>The narrow sieve</h2></div>
+  <div class="prose">
+    <p>This is the trick that beats 2<sup class="v">n</sup>. Split the vertices at random into two halves, <span class="v">V</span><sub>1</sub> (filled) and <span class="v">V</span><sub>2</sub> (hollow). Björklund builds his cycle covers on <span class="v">V</span><sub>1</sub> only. Each arc of such a cover is either a path through some vertices of <span class="v">V</span><sub>2</sub>, labelled by those vertices, or a single edge between two <span class="v">V</span><sub>1</sub> vertices. The paper calls that a <b>direct arc</b> and gives it one extra label.</p>
+    <p>The algorithm runs on any graph and never sees where a Hamiltonian cycle is. The pictures below show one random graph. Its Hamiltonian cycle is drawn as the outer ring, and its other edges are the faint lines inside. The split is a split of all the vertices, but whether a test can catch the cycle depends only on how the split cuts that cycle. So the odds are the same for every graph that has a Hamiltonian cycle. If a graph has several, the test needs to catch only one, so the odds can only improve. The other edges still matter for the sum, but the extra cycle covers they create cancel out, as in step 4.</p>
+    <p>The determinant already makes sure every <span class="v">V</span><sub>1</sub> vertex is used once. The sieve only has to check the labels: <span class="v">n</span>/2 vertices of <span class="v">V</span><sub>2</sub> plus <span class="v">m</span> extra labels for the direct arcs. That is 2<sup class="v">n/2+m</sup> terms instead of 2<sup class="v">n</sup>. This is what <b>narrow</b> means: inclusion–exclusion over a small set of labels, not over every vertex. The name comes from Björklund, Husfeldt, Kaski and Koivisto, who used the same idea for long paths.</p>
+    <p>There is a catch. A test with cutoff <span class="v">m</span><sub>max</sub> only catches the cycle when the random split gives it at most <span class="v">m</span><sub>max</sub> direct arcs. A small cutoff makes the test cheap but that event rare.</p>
+  </div>
+  <figure class="panel">
+    <div class="cols">
+      <div class="side">
+        <svg id="ns-svg" viewBox="0 0 300 300" role="img" aria-label="A random graph with its Hamiltonian cycle drawn as the outer ring, under a random split; direct arcs in red"></svg>
+        <div class="legend"><span><i class="lg-v1"></i>in V₁</span><span><i class="lg-v2"></i>in V₂</span><span><i class="lg-d"></i>direct arc</span><span><i class="lg-e"></i>cycle edge touching V₂</span><span><i class="lg-c"></i>other edges of the graph</span></div>
+      </div>
+      <div class="side">
+        <div class="controls"><button type="button" class="btn primary" id="ns-new">New random split</button><button type="button" class="btn" id="ns-graph">New random graph</button></div>
+        <label class="check"><input type="checkbox" id="ns-chords" checked> Show the rest of the graph</label>
+        <p>This split gives the cycle <span class="big" id="ns-m">0</span> direct arcs.</p>
+        <div class="mini-title">Labels the sieve has to check</div>
+        <div class="chips" id="ns-chips"></div>
+        <dl class="kv">
+          <dt>Narrow sieve</dt><dd id="ns-terms"></dd>
+          <dt>Normal sieve over all vertices</dt><dd id="ns-full"></dd>
+        </dl>
+        <label class="slider" for="ns-n">Number of vertices <b id="ns-n-out">12</b><input type="range" id="ns-n" min="8" max="24" step="2" value="12"></label>
+      </div>
+    </div>
+  </figure>
+  <figure class="panel">
+    <div class="panel-title">How often does a random split give <span class="v">m</span> direct arcs?</div>
+    <div class="cols">
+      <svg id="ns-hist" viewBox="0 0 440 240" role="img" aria-label="Histogram of the number of direct arcs over random splits"></svg>
+      <div class="side">
+        <div class="controls"><button type="button" class="btn primary" id="ns-run">Try 2,000 random splits</button><span class="readout">tried: <b id="ns-N">0</b></span></div>
+        <label class="slider" for="ns-cut">Cutoff m<sub>max</sub> <b id="ns-cut-out">2</b><input type="range" id="ns-cut" min="0" max="5" value="2"></label>
+        <dl class="kv">
+          <dt>Chance one test catches the cycle, <span class="v">P</span></dt><dd id="ns-P"></dd>
+          <dt>Terms in one test, all <span class="v">m</span> ≤ <span class="v">m</span><sub>max</sub></dt><dd id="ns-cost"></dd>
+          <dt>Classical tests needed, about 1/<span class="v">P</span></dt><dd id="ns-tests"></dd>
+          <dt>Classical total</dt><dd id="ns-total"></dd>
+          <dt>Normal sieve, for comparison</dt><dd id="ns-full2"></dd>
+        </dl>
+      </div>
+    </div>
+    <p class="note">Bars: simulated random splits. Black ticks: the exact probability from the paper’s appendix, (<span class="v">n</span>/<span class="v">r</span>)·C(<span class="v">k</span>−1, <span class="v">r</span>−1)² / C(<span class="v">n</span>, <span class="v">k</span>) with <span class="v">k</span> = <span class="v">n</span>/2 and <span class="v">r</span> = <span class="v">k</span> − <span class="v">m</span>. At these small sizes the savings are modest and polynomial factors would dominate. What matters is the shape of the trade-off, which step 7 follows to large <span class="v">n</span>.</p>
+  </figure>
+  <div class="prose">
+    <p>So Björklund repeats the test with fresh random splits and fresh random numbers until one fires. Each test also has a small chance that the random numbers hide a real cycle (at most 1 in 4), which repetition covers too. If the graph has no Hamiltonian cycle, no split and no random numbers can make the test fire. The error is one-sided, and that matters in step 6.</p>
+  </div>
+</section>
+
+<!-- ============ STEP 6 ============ -->
+<section class="step" id="amplify">
+  <div class="step-head"><span class="step-no">Step 6</span><h2>Repeat or amplify</h2></div>
+  <div class="prose">
+    <p>If one test fires with probability <span class="v">P</span>, a classical computer needs about 1/<span class="v">P</span> tests. A quantum computer can use <b>amplitude amplification</b>, the general form of Grover’s search, and needs only about 1/√<span class="v">P</span> rounds. Each round runs the test once forwards and once backwards, so it costs about two tests.</p>
+    <p>The quantum computer runs Björklund’s test on a superposition of every random split and every choice of random numbers at once. A flag marks the branches where the test fired. The picture below is exact: the state lives in a plane spanned by “test fired” and “test did not fire”, and each round is two reflections that together turn it by the same small angle.</p>
+  </div>
+  <figure class="panel">
+    <div class="controls">
+      <label class="slider grow" for="am-p">Chance that one test fires <b id="am-p-out">1 in 400</b><input type="range" id="am-p" min="0.6" max="4.3" step="0.05" value="2.6"></label>
+      <label class="check"><input type="checkbox" id="am-none"> The graph has no Hamiltonian cycle</label>
+    </div>
+    <div class="cols">
+      <div class="side">
+        <div class="mini-title">Quantum: the state, round by round</div>
+        <svg id="am-svg" viewBox="0 0 340 300" role="img" aria-label="Amplitude amplification as a rotating arrow"></svg>
+      </div>
+      <div class="side">
+        <div class="controls">
+          <button type="button" class="btn primary" id="am-race">Race them</button>
+          <button type="button" class="btn" id="am-step">One round</button>
+          <button type="button" class="btn" id="am-reset">Reset</button>
+        </div>
+        <dl class="kv">
+          <dt>Quantum rounds</dt><dd id="am-j"></dd>
+          <dt>Chance of “yes” if measured now</dt><dd id="am-prob"></dd>
+          <dt>Classical tests run so far</dt><dd id="am-t"></dd>
+        </dl>
+        <div class="mini-title">Classical: repeat until a test fires</div>
+        <div class="strip" id="am-strip"></div>
+        <p class="status" id="am-msg" aria-live="polite"></p>
+      </div>
+    </div>
+    <p class="note" id="am-expect"></p>
+  </figure>
+  <div class="prose">
+    <p>Two things make this legitimate. First, the test never fires wrongly, so a “yes” always means a real cycle. Tick the box above: with no Hamiltonian cycle the arrow starts flat and never moves. Second, the amplification is over the random choices, not over the sum inside a test. A sum needs every one of its terms. Grover can find a needle, but it cannot add up a haystack faster. So the 2<sup class="v">n/2+m</sup> terms stay, and only the number of repetitions shrinks.</p>
+    <p class="note">Since <span class="v">P</span> is not known in advance, the algorithm uses the randomised round counts of Brassard, Høyer, Mosca and Tapp. That changes only constant factors.</p>
+  </div>
+</section>
+
+<!-- ============ STEP 7 ============ -->
+<section class="step" id="cutoff">
+  <div class="step-head"><span class="step-no">Step 7</span><h2>Moving the cutoff</h2></div>
+  <div class="prose">
+    <p>This is the paper’s actual contribution. Once repetitions are cheaper, the best cutoff changes.</p>
+    <p>Raising the cutoff by one adds a label and doubles the cost of a test. It also makes success more likely. Classically, the extra label pays for itself while it makes success more than <b>2×</b> likelier. Quantumly, the repetitions shrink only by the square root, so it pays only while success gets more than <b>4×</b> likelier. The 4× point comes sooner. The quantum algorithm stops at <span class="v">m</span> = <span class="v">n</span>/6 instead of 0.207<span class="v">n</span>, and runs cheaper tests more often.</p>
+  </div>
+  <figure class="panel">
+    <div class="panel-title">Total cost against the cutoff μ = m<sub>max</sub>/n</div>
+    <div class="chart-wrap"><svg id="to-svg" viewBox="0 0 640 300" role="img" aria-label="Base of the total running time against the cutoff, classical and quantum"></svg></div>
+    <label class="slider" for="to-mu">Cutoff μ <b id="to-mu-out">0.167</b><input type="range" id="to-mu" min="0.05" max="0.35" step="0.001" value="0.1667"></label>
+    <div class="controls"><button type="button" class="btn" id="to-c">Jump to the classical best, 0.207</button><button type="button" class="btn" id="to-q">Jump to the quantum best, 1/6</button></div>
+    <div class="mini-title">Where the exponent goes: total cost = 2<sup>(sum)·n</sup></div>
+    <div class="stack" id="to-stack"></div>
+    <div class="slegend"><span><i style="background:var(--v2seg)"></i>labels for V₂, ½</span><span><i style="background:var(--d-tint);box-shadow:inset 2px 0 0 var(--direct)"></i>extra labels for direct arcs, μ</span><span><i style="background:var(--c-tint);box-shadow:inset 2px 0 0 var(--classical)"></i>classical repetitions</span><span><i style="background:var(--q-tint);box-shadow:inset 2px 0 0 var(--quantum)"></i>quantum rounds</span></div>
+    <p class="readout" id="to-read"></p>
+  </figure>
+  <figure class="panel">
+    <div class="panel-title">The doubling rule: how much likelier success gets with one more direct arc</div>
+    <div class="chart-wrap"><svg id="db-svg" viewBox="0 0 640 260" role="img" aria-label="Gain in success probability per extra direct arc"></svg></div>
+    <label class="slider" for="db-n">Number of vertices <b id="db-n-out">60</b><input type="range" id="db-n" min="24" max="600" step="12" value="60"></label>
+    <p class="readout" id="db-read"></p>
+  </figure>
+  <div class="prose">
+    <h3>The whole algorithm</h3>
+    <ol class="algo">
+      <li><span>Put every balanced split of the vertices, and every choice of random numbers, into superposition.</span></li>
+      <li><span>For each cutoff <span class="v">m</span> from 0 to <span class="v">n</span>/6, run Björklund’s narrow sieve as a reversible circuit: 2<sup class="v">n/2+m</sup> determinants, added into an accumulator.</span></li>
+      <li><span>Set a flag if any of the sums is nonzero.</span></li>
+      <li><span>Amplify the flag with about 2<sup>0.041<span class="v">n</span></sup> rounds. Total: 2<sup>(2/3)<span class="v">n</span></sup> · 2<sup>0.041<span class="v">n</span></sup> = (8/3)<sup class="v">n/2</sup> ≈ 1.633<sup class="v">n</sup>.</span></li>
+    </ol>
+    <p>Memory stays small. The qubits hold the split, the random numbers and a polynomial workspace. There is no quantum RAM, which the earlier 1.728<sup class="v">n</sup> quantum algorithm needed.</p>
+  </div>
+</section>
+
+<!-- ============ STEP 8 ============ -->
+<section class="step" id="quiz">
+  <div class="step-head"><span class="step-no">Step 8</span><h2>Check yourself</h2></div>
+  <div class="prose"><p>Seven questions, one for each idea above. Pick an answer to see the explanation.</p></div>
+  <div class="panel"><div class="quiz" id="quiz-box"></div><p class="score" id="quiz-score" aria-live="polite"></p></div>
+</section>
+
+<!-- ============ STEP 9 ============ -->
+<section class="step" id="status">
+  <div class="step-head"><span class="step-no">Step 9</span><h2>What is proved, and what is not</h2></div>
+  <div class="prose">
+    <ul>
+      <li><b>Proved, from published lemmas.</b> The running time follows from Björklund’s Lemmas 9–11 and the amplitude amplification theorem. The paper uses Björklund’s lemmas as published and does not re-prove them.</li>
+      <li><b>Tested end to end.</b> The repository’s test scripts run Björklund’s test on every split of small graphs: 18,688 cases with up to 12 vertices, including the Petersen graph, with no failures. Tests on small graphs are not a proof.</li>
+      <li><b>Novelty is open.</b> Amplifying a randomized algorithm is a standard technique, so experts may already know this observation.</li>
+      <li><b>Not the fastest everywhere.</b> On graphs where every vertex has at most 3 or 4 neighbours, quantum backtracking (Moylett, Linden and Montanaro) is much faster: 1.110<sup class="v">n</sup> and 1.301<sup class="v">n</sup>.</li>
+      <li><b>Not practical.</b> Running it would need a large fault-tolerant quantum computer, and the circuit depth is exponential, as for any exponential-time algorithm.</li>
+      <li><b>Consistent with the Exponential Time Hypothesis.</b> The base drops, but the growth is still exponential.</li>
+    </ul>
+    <p>Read the paper: <a href="https://github.com/kdalkafoukis/vibe-researching-with-ai/tree/main/papers/quantum-hamiltonicity" target="_blank" rel="noopener">quantum-hamiltonicity on GitHub</a>. Björklund’s original: <a href="https://arxiv.org/abs/1008.0541" target="_blank" rel="noopener">Determinant sums for undirected Hamiltonicity, arXiv:1008.0541</a>.</p>
+  </div>
+</section>
+</main>
+
+<footer>Konstantinos Dalkafoukis, with Claude Opus 5.5 (Anthropic). An explainer for the draft paper “Amplifying Determinant Sums”.</footer>
+
+<script>
+(function(){
+'use strict';
+var RM = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var NS = 'http://www.w3.org/2000/svg';
+function $(id){ return document.getElementById(id); }
+function S(tag, attrs, parent){ var e=document.createElementNS(NS, tag); if(attrs) for(var k in attrs) e.setAttribute(k, attrs[k]); if(parent) parent.appendChild(e); return e; }
+function T(parent, x, y, txt, cls, anchor){ var t=S('text',{x:x,y:y,'text-anchor':anchor||'start'},parent); if(cls) t.setAttribute('class',cls); t.textContent=txt; return t; }
+function clear(n){ while(n.firstChild) n.removeChild(n.firstChild); }
+var LOGF = new Float64Array(6001); for(var i=1;i<=6000;i++) LOGF[i]=LOGF[i-1]+Math.log(i);
+function lnC(n,k){ return (k<0||k>n) ? -Infinity : LOGF[n]-LOGF[k]-LOGF[n-k]; }
+function H(x){ return (x<=0||x>=1) ? 0 : -(x*Math.log2(x)+(1-x)*Math.log2(1-x)); }
+function fmt(x){ return Math.round(x).toLocaleString('en-US'); }
+function sci(l10){ if(l10<6) return fmt(Math.pow(10,l10)); var e=Math.floor(l10), m=Math.pow(10,l10-e); if(m>=9.95){m=1;e++;} return m.toFixed(1)+'&#8239;×&#8239;10<sup>'+e+'</sup>'; }
+function ringPos(n, r, off){ var out=[]; for(var i=0;i<n;i++){ var a=(off+360*i/n)*Math.PI/180; out.push([r*Math.cos(a), r*Math.sin(a)]); } return out; }
+function randomSplit(n){ var b=[]; for(var i=0;i<n;i++) b.push(i<n/2?1:0); for(var j=n-1;j>0;j--){ var r=Math.floor(Math.random()*(j+1)); var t=b[j]; b[j]=b[r]; b[r]=t; } return b; }
+function directCount(b){ var m=0; for(var i=0;i<b.length;i++) if(b[i]&&b[(i+1)%b.length]) m++; return m; }
+function ekey(u,v){ return u<v ? u+'-'+v : v+'-'+u; }
+function segGroup(el, attr, onPick){ el.addEventListener('click', function(e){ var b=e.target.closest('button'); if(!b||!el.contains(b)) return; el.querySelectorAll('button').forEach(function(x){ x.setAttribute('aria-pressed', x===b?'true':'false'); }); onPick(b.getAttribute(attr)); }); }
+function animate(ms, frame, done){ if(RM||ms<=0){ frame(1); if(done) done(); return; } var t0=null; function step(ts){ if(t0===null) t0=ts; var t=Math.min(1,(ts-t0)/ms); frame(t); if(t<1) requestAnimationFrame(step); else if(done) done(); } requestAnimationFrame(step); }
+
+function drawRing(svg, bits, o){
+  clear(svg); var n=bits.length, c=o.size/2, P=ringPos(n,o.r,-90).map(function(p){ return [c+p[0], c+p[1]]; });
+  if(o.chords) o.chords.forEach(function(e){ S('line',{x1:P[e[0]][0],y1:P[e[0]][1],x2:P[e[1]][0],y2:P[e[1]][1],'class':'ring-chord'},svg); });
+  for(var i=0;i<n;i++){ var j=(i+1)%n; S('line',{x1:P[i][0],y1:P[i][1],x2:P[j][0],y2:P[j][1],'class':'ring-edge'+(bits[i]&&bits[j]?' direct':'')},svg); }
+  var L=o.labels ? ringPos(n,o.r+19,-90) : null;
+  for(var k=0;k<n;k++){ S('circle',{cx:P[k][0],cy:P[k][1],r:o.vr,'class':bits[k]?'v1':'v2'},svg); if(L) T(svg,c+L[k][0],c+L[k][1]+4,String(k+1),'lbl','middle'); }
+}
+
+/* ---------- hero ---------- */
+var heroBits=randomSplit(16);
+function heroDraw(){ drawRing($('hero-ring'), heroBits, {size:260, r:104, vr:7.5}); $('hero-m').textContent=directCount(heroBits); }
+heroDraw();
+if(!RM) setInterval(function(){ if(document.hidden) return; heroBits=randomSplit(16); heroDraw(); }, 2800);
+
+/* ---------- step 1: puzzle ---------- */
+var GRAPHS={
+  dodeca:(function(){ var pos=ringPos(5,1,-90).concat(ringPos(10,0.66,-90), ringPos(5,0.33,-54)); var E=[];
+    for(var i=0;i<5;i++){ E.push([i,(i+1)%5],[i,5+2*i],[6+2*i,15+i],[15+i,15+(i+1)%5]); } for(var j=0;j<10;j++) E.push([5+j,5+(j+1)%10]);
+    return {n:20,pos:pos,E:E,note:'The dodecahedron: 20 vertices, 30 edges. Hamilton sold a round trip on it as a puzzle, the Icosian game, in 1857. It has 30 Hamiltonian cycles.'}; })(),
+  cube:(function(){ var pos=ringPos(4,1,-135).concat(ringPos(4,0.45,-135)); var E=[];
+    for(var i=0;i<4;i++){ E.push([i,(i+1)%4],[4+i,4+(i+1)%4],[i,4+i]); }
+    return {n:8,pos:pos,E:E,note:'The cube: 8 vertices, 12 edges, and 6 Hamiltonian cycles. A warm-up.'}; })(),
+  petersen:(function(){ var pos=ringPos(5,1,-90).concat(ringPos(5,0.48,-90)); var E=[];
+    for(var i=0;i<5;i++){ E.push([i,(i+1)%5],[i,5+i],[5+i,5+(i+2)%5]); }
+    return {n:10,pos:pos,E:E,note:'The Petersen graph: the most famous graph with no Hamiltonian cycle. It does have Hamiltonian paths. Switch to “Find a path” to look for one.'}; })()
+};
+var pz={key:'dodeca', mode:'cycle', path:[], closed:false, timer:null, A:null, edges:{}, verts:[]};
+function pzBuild(){
+  var g=GRAPHS[pz.key], svg=$('pz-svg'); clear(svg);
+  pz.A=[]; for(var i=0;i<g.n;i++) pz.A.push(new Set());
+  g.E.forEach(function(e){ pz.A[e[0]].add(e[1]); pz.A[e[1]].add(e[0]); });
+  function X(p){ return 150+p[0]*120; } function Y(p){ return 150+p[1]*120; }
+  pz.edges={}; var ge=S('g',null,svg);
+  g.E.forEach(function(e){ pz.edges[ekey(e[0],e[1])]=S('line',{x1:X(g.pos[e[0]]),y1:Y(g.pos[e[0]]),x2:X(g.pos[e[1]]),y2:Y(g.pos[e[1]]),'class':'pz-edge'},ge); });
+  pz.verts=[]; var gv=S('g',null,svg);
+  g.pos.forEach(function(p,i){ var c=S('circle',{cx:X(p),cy:Y(p),r:10,'class':'pz-v',tabindex:'0',role:'button','aria-label':'Vertex '+(i+1)},gv);
+    c.addEventListener('click',function(){ pzClick(i); });
+    c.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); pzClick(i); } });
+    pz.verts.push(c); });
+  $('pz-note').textContent=g.note;
+  var lo = pz.mode==='cycle' ? LOGF[g.n-1]-Math.LN2 : LOGF[g.n]-Math.LN2;
+  $('pz-brute').innerHTML='Brute force would check '+(pz.mode==='cycle'?'(n−1)!/2':'n!/2')+' = '+sci(lo/Math.LN10)+' orderings here. At 100 vertices it would be about 10<sup>156</sup>.';
+  pzRender();
+}
+function pzStop(){ if(pz.timer){ clearTimeout(pz.timer); pz.timer=null; } }
+function pzClick(i){
+  pzStop(); var g=GRAPHS[pz.key], p=pz.path;
+  if(pz.closed){ $('pz-status').textContent='Solved. Press “Start over” to try again.'; return; }
+  var last=p[p.length-1];
+  if(!p.length) p.push(i);
+  else if(i===last) p.pop();
+  else if(pz.mode==='cycle' && i===p[0] && p.length===g.n && pz.A[last].has(i)) pz.closed=true;
+  else if(p.indexOf(i)<0 && pz.A[last].has(i)) p.push(i);
+  else { $('pz-status').textContent= p.indexOf(i)>=0 ? 'That vertex is already on your path. Each vertex may be visited only once.' : 'That vertex is not next to the end of your path. Pick one of the highlighted neighbours.'; return; }
+  pzRender();
+}
+function pzRender(){
+  var g=GRAPHS[pz.key], p=pz.path, n=g.n, on={};
+  for(var i=0;i+1<p.length;i++) on[ekey(p[i],p[i+1])]=1;
+  if(pz.closed) on[ekey(p[p.length-1],p[0])]=1;
+  for(var k in pz.edges) pz.edges[k].classList.toggle('on', !!on[k]);
+  var end=p[p.length-1], free={};
+  if(end!==undefined && !pz.closed) pz.A[end].forEach(function(v){ if(p.indexOf(v)<0) free[v]=1; });
+  pz.verts.forEach(function(c,i){ c.classList.toggle('visited',p.indexOf(i)>=0); c.classList.toggle('end',i===end&&!pz.closed); c.classList.toggle('free',!!free[i]); c.classList.toggle('start',p.length>0&&i===p[0]); });
+  $('pz-count').textContent='Visited '+p.length+' of '+n;
+  var s;
+  if(!p.length) s='Click any vertex to start.';
+  else if(pz.closed) s='Hamiltonian cycle found: every vertex exactly once, and back to the start.';
+  else if(p.length===n && pz.mode==='path') s='Hamiltonian path found: every vertex exactly once.';
+  else if(p.length===n) s = pz.A[end].has(p[0]) ? 'Every vertex visited. Click the starting vertex to close the cycle.' : 'Every vertex visited, but the last one is not next to the first. That is a Hamiltonian path, not a cycle.';
+  else if(!Object.keys(free).length) s='Stuck: the end of your path has no unvisited neighbours. Click the end vertex, or “Step back”, to back up.';
+  else s='Highlighted vertices are the moves you can make. Click the end vertex to back up.';
+  $('pz-status').textContent=s;
+}
+function findHam(g, mode){
+  var A=[]; for(var i=0;i<g.n;i++) A.push([]); g.E.forEach(function(e){ A[e[0]].push(e[1]); A[e[1]].push(e[0]); });
+  var explored=0, path=[], used=[];
+  function dfs(v){ explored++; if(path.length===g.n) return mode==='path' || A[v].indexOf(path[0])>=0;
+    for(var j=0;j<A[v].length;j++){ var w=A[v][j]; if(!used[w]){ used[w]=true; path.push(w); if(dfs(w)) return true; path.pop(); used[w]=false; } } return false; }
+  var starts = mode==='cycle' ? [0] : Array.from({length:g.n},function(_,i){ return i; });
+  for(var s=0;s<starts.length;s++){ path=[starts[s]]; used=[]; used[starts[s]]=true; if(dfs(starts[s])) return {path:path, explored:explored}; }
+  return {path:null, explored:explored};
+}
+function pzSolve(){
+  pzStop(); var g=GRAPHS[pz.key], res=findHam(g, pz.mode);
+  pz.path=[]; pz.closed=false;
+  if(!res.path){ pzRender(); $('pz-status').textContent='There is no Hamiltonian '+pz.mode+' here. An exhaustive search through '+fmt(res.explored)+' partial paths found none.'; return; }
+  if(RM){ pz.path=res.path.slice(); pz.closed=pz.mode==='cycle'; pzRender(); return; }
+  var i=0; (function step(){ if(i<res.path.length){ pz.path.push(res.path[i++]); pzRender(); pz.timer=setTimeout(step,85); } else { pz.closed=pz.mode==='cycle'; pzRender(); } })();
+}
+segGroup($('pz-graphs'),'data-g',function(k){ pzStop(); pz.key=k; pz.path=[]; pz.closed=false; pzBuild(); });
+segGroup($('pz-modes'),'data-mode',function(m){ pzStop(); pz.mode=m; pz.path=[]; pz.closed=false; pzBuild(); });
+$('pz-undo').addEventListener('click',function(){ pzStop(); if(pz.closed) pz.closed=false; else pz.path.pop(); pzRender(); });
+$('pz-reset').addEventListener('click',function(){ pzStop(); pz.path=[]; pz.closed=false; pzRender(); });
+$('pz-solve').addEventListener('click',pzSolve);
+pzBuild();
+
+/* ---------- step 2: growth ---------- */
+var ALGS=[
+  {name:'Brute force', note:'try every ordering', kind:'c', dash:'2 5', l10:function(n){ return (LOGF[n-1]-Math.LN2)/Math.LN10; }, tag:'brute force'},
+  {name:'Grover over orderings', note:'quantum search over orderings', kind:'q', dash:'2 5', l10:function(n){ return (LOGF[n-1]-Math.LN2)/Math.LN10/2; }, tag:'Grover'},
+  {name:'Bellman–Held–Karp', note:'dynamic programming, 1962', kind:'c', base:2, tag:'2ⁿ'},
+  {name:'Ambainis et al.', note:'quantum, needs quantum RAM, 2019', kind:'q', base:1.728, tag:'1.728ⁿ'},
+  {name:'Björklund', note:'determinant sums, 2010', kind:'c', base:1.657, tag:'1.657ⁿ'},
+  {name:'This paper', note:'amplified determinant sums', kind:'q', base:Math.sqrt(8/3), tag:'1.633ⁿ', main:true}
+];
+ALGS.forEach(function(a){ if(a.base){ var b=Math.log10(a.base); a.l10=function(n){ return n*b; }; } });
+var RC={x0:52,x1:600,y0:14,y1:292,n0:10,n1:150,ym:60};
+function rx(n){ return RC.x0+(n-RC.n0)/(RC.n1-RC.n0)*(RC.x1-RC.x0); }
+function ry(v){ return RC.y1-v/RC.ym*(RC.y1-RC.y0); }
+function sup10(parent,x,y,exp){ var t=S('text',{x:x,y:y,'text-anchor':'end'},parent); t.appendChild(document.createTextNode('10')); var s=S('tspan',{dy:'-6','font-size':'9'},t); s.textContent=String(exp); return t; }
+function raceBuild(){
+  var svg=$('race-svg'); clear(svg);
+  for(var v=0; v<=RC.ym; v+=10){ S('line',{x1:RC.x0,x2:RC.x1,y1:ry(v),y2:ry(v),'class':'grid'},svg); sup10(svg,RC.x0-8,ry(v)+4,v); }
+  for(var n=20;n<=140;n+=20){ S('line',{x1:rx(n),x2:rx(n),y1:RC.y0,y2:RC.y1,'class':'grid'},svg); T(svg,rx(n),RC.y1+18,String(n),'', 'middle'); }
+  T(svg,RC.x1,RC.y1+18,'n','', 'end');
+  ALGS.forEach(function(a){
+    var pts=[], exitN=null;
+    for(var n=RC.n0;n<=RC.n1;n++){ var val=a.l10(n); if(val>RC.ym){ var vp=a.l10(n-1), t=(RC.ym-vp)/(val-vp); exitN=n-1+t; pts.push([rx(exitN),ry(RC.ym)]); break; } pts.push([rx(n),ry(val)]); }
+    S('polyline',{points:pts.map(function(p){ return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' '),'class':'ln '+a.kind+(a.main?' main':''),'stroke-dasharray':a.dash||'none'},svg);
+    a.exitN=exitN;
+    if(exitN) T(svg,rx(exitN)+6,RC.y0+12,a.tag,'lbl '+a.kind);
+  });
+  var ends=ALGS.filter(function(a){ return !a.exitN; }).map(function(a){ return {a:a,y:ry(a.l10(RC.n1))}; }).sort(function(p,q){ return p.y-q.y; });
+  for(var i=1;i<ends.length;i++) if(ends[i].y-ends[i-1].y<14) ends[i].y=ends[i-1].y+14;
+  ends.forEach(function(e){ T(svg,RC.x1+8,e.y+4,e.a.tag,'lbl '+e.a.kind+(e.a.main?' strong':'')); });
+  RC.cur=S('g',null,svg);
+  var body=$('race-body'); body.innerHTML='';
+  ALGS.forEach(function(a,i){ var tr=document.createElement('tr'); if(a.main) tr.className='main';
+    tr.innerHTML='<td><i class="sw '+a.kind+(a.dash?' dash':'')+'"></i>'+a.name+' <span class="sub">'+a.note+'</span></td><td class="n" id="rs'+i+'"></td><td id="rt'+i+'"></td>'; body.appendChild(tr); });
+}
+function duration(ls){
+  if(ls<0) return 'under a second';
+  var s=Math.pow(10,ls);
+  if(s<60) return Math.round(s)+' seconds';
+  if(s<3600) return Math.round(s/60)+' minutes';
+  if(s<86400) return Math.round(s/3600)+' hours';
+  if(s<3.156e7) return Math.round(s/86400)+' days';
+  var ly=ls-Math.log10(3.156e7), uni=Math.log10(1.38e10);
+  if(ly<uni) return sci(ly)+' years';
+  return sci(ly-uni)+' × the age of the universe';
+}
+function raceUpdate(){
+  var n=+$('race-n').value; $('race-n-out').textContent=n;
+  var g=RC.cur; clear(g); S('line',{x1:rx(n),x2:rx(n),y1:RC.y0,y2:RC.y1,'class':'cursor'},g);
+  ALGS.forEach(function(a,i){ var v=a.l10(n); if(v<=RC.ym) S('circle',{cx:rx(n),cy:ry(v),r:a.main?5.5:4,'class':'dot '+a.kind},g);
+    $('rs'+i).innerHTML=sci(v); $('rt'+i).innerHTML=duration(v-12); });
+  var r=Math.pow(1.657/Math.sqrt(8/3), n);
+  $('race-ratio').innerHTML='At n = '+n+', Björklund needs '+(r<100?r.toFixed(2):fmt(r))+'× as many steps as this paper, and 2<sup>n</sup> needs '+sci(n*Math.log10(2/Math.sqrt(8/3)))+'×.';
+}
+function budgetUpdate(){
+  var B=+$('race-budget').value;
+  var rows=ALGS.map(function(a){ var n=2; while(n<5000 && a.l10(n+1)<=B) n++; return {a:a,n:n}; });
+  var mx=Math.max.apply(null, rows.map(function(r){ return r.n; }));
+  var box=$('budget-bars'); box.innerHTML='';
+  rows.forEach(function(r){ var d=document.createElement('div'); d.className='brow'+(r.a.main?' main':'');
+    d.innerHTML='<span>'+r.a.name+'</span><div class="track"><div class="fill '+r.a.kind+'" style="width:'+(100*r.n/mx).toFixed(1)+'%"></div></div><b>'+r.n+'</b>'; box.appendChild(d); });
+}
+raceBuild(); raceUpdate(); budgetUpdate();
+$('race-n').addEventListener('input',raceUpdate);
+$('race-budget').addEventListener('change',budgetUpdate);
+
+/* ---------- step 3: normal sieve ---------- */
+var SV={nm:['A','B','C','D','E'], pos:ringPos(5,1,-90)};
+var SVM=[]; for(var r0=0;r0<5;r0++) SVM.push([0,0,0,0,0]);
+[[0,1],[1,2],[2,3],[3,4],[4,0],[0,2],[0,3]].forEach(function(e){ SVM[e[0]][e[1]]=1; SVM[e[1]][e[0]]=1; });
+var PAIRS=[]; for(var pa=0;pa<5;pa++) for(var pb=pa+1;pb<5;pb++) PAIRS.push([pa,pb]);
+function popc(x){ var c=0; while(x){ c+=x&1; x>>=1; } return c; }
+function setName(m){ var s=''; for(var i=0;i<5;i++) if(m>>i&1) s+=SV.nm[i]; return s||'∅'; }
+function setList(m){ return m ? '{'+setName(m).split('').join(', ')+'}' : 'the empty set'; }
+function closedWalks(mask,len){
+  var idx=[]; for(var i=0;i<5;i++) if(mask>>i&1) idx.push(i); var m=idx.length; if(!m) return 0;
+  var A=idx.map(function(u){ return idx.map(function(v){ return SVM[u][v]; }); });
+  var P=idx.map(function(_,a){ return idx.map(function(_,b){ return a===b?1:0; }); });
+  for(var t=0;t<len;t++){ P=P.map(function(row){ return idx.map(function(_,j){ var s=0; for(var k=0;k<m;k++) s+=row[k]*A[k][j]; return s; }); }); }
+  var tr=0; for(var d=0;d<m;d++) tr+=P[d][d]; return tr;
+}
+function svHam(){ var cnt=0, used=[true,false,false,false,false], path=[0];
+  (function dfs(v){ if(path.length===5){ if(SVM[v][0]) cnt++; return; } for(var w=1;w<5;w++) if(!used[w]&&SVM[v][w]){ used[w]=true; path.push(w); dfs(w); path.pop(); used[w]=false; } })(0);
+  return cnt/2; }
+function sgn(m){ return (5-popc(m))%2 ? -1 : 1; }
+var SVW=[], SVcols=[], SVtile={};
+for(var sz=5;sz>=0;sz--){ var col=[]; for(var m2=0;m2<32;m2++) if(popc(m2)===sz) col.push(m2); col.sort(function(a,b){ return setName(a)<setName(b)?-1:1; }); SVcols.push(col); }
+var sv={order:[].concat.apply([],SVcols), i:0, total:0, playing:false, timer:null, walk:[], walkDone:false, inspect:null, mode:'walk', tokTimer:null};
+var svLine={}, svHit={}, svVEls=[], svTok=null, svPresetBtns=[];
+function svPos(i){ return [110+SV.pos[i][0]*80, 112+SV.pos[i][1]*80]; }
+var WALKS=[
+  {label:'A → B → C → A → B → A, misses D and E', seq:[0,1,2,0,1]},
+  {label:'A → B → C → D → C → A, misses E', seq:[0,1,2,3,2]},
+  {label:'A → B → C → D → E → A, Hamiltonian', seq:[0,1,2,3,4]}
+];
+(function(){
+  var box=$('sv-tiles'), heads=['all 5<br>add','4 of 5<br>subtract','3 of 5<br>add','2 of 5<br>subtract','1 of 5<br>add','none<br>subtract'];
+  SVcols.forEach(function(col,ci){ var c=document.createElement('div'); c.className='tcol'; c.innerHTML='<h4>'+heads[ci]+'</h4>';
+    col.forEach(function(m){ var t=document.createElement('button'); t.type='button'; t.className='tile';
+      t.innerHTML='<b>'+setName(m)+'</b><span class="val"></span><span class="badge"></span>';
+      t.setAttribute('aria-label','Subset '+setName(m)); t.addEventListener('click',function(){ svInspect(m); });
+      SVtile[m]=t; c.appendChild(t); });
+    box.appendChild(c); });
+  var svg=$('sv-svg'), ge=S('g',null,svg), gh=S('g',null,svg);
+  PAIRS.forEach(function(p){ var a=svPos(p[0]), b=svPos(p[1]), k=ekey(p[0],p[1]);
+    svLine[k]=S('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1]},ge);
+    var h=S('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],'class':'sv-hit',role:'button','aria-label':'Edge '+SV.nm[p[0]]+'–'+SV.nm[p[1]]},gh);
+    h.addEventListener('click',function(){ svToggleEdge(p[0],p[1]); });
+    h.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); svToggleEdge(p[0],p[1]); } });
+    svHit[k]=h; });
+  [0,1,2,3,4].forEach(function(i){ var p=svPos(i);
+    var c=S('circle',{cx:p[0],cy:p[1],r:15,'class':'sv-v',role:'button',tabindex:'0','aria-label':'Vertex '+SV.nm[i]},svg);
+    c.addEventListener('click',function(){ svVertexClick(i); });
+    c.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); svVertexClick(i); } });
+    svVEls.push(c); T(svg,p[0],p[1]+4.5,SV.nm[i],'sv-vt','middle'); });
+  svTok=S('circle',{cx:0,cy:0,r:6,'class':'sv-token',opacity:'0'},svg);
+  var wb=$('sv-walks');
+  WALKS.forEach(function(w){ var b=document.createElement('button'); b.type='button'; b.className='btn'; b.textContent=w.label;
+    b.addEventListener('click',function(){ svShowWalk(w.seq); }); wb.appendChild(b); svPresetBtns.push({b:b,w:w}); });
+})();
+function svWalkValid(seq){ for(var i=0;i<seq.length;i++) if(!SVM[seq[i]][seq[(i+1)%seq.length]]) return false; return true; }
+function svPresets(){ svPresetBtns.forEach(function(p){ var ok=svWalkValid(p.w.seq); p.b.disabled=!ok; p.b.title= ok ? '' : 'This walk uses an edge that is not in the graph now'; }); }
+function svRecount(){ for(var m=0;m<32;m++){ SVW[m]=closedWalks(m,5); var v=sgn(m)*SVW[m]; SVtile[m].querySelector('.val').textContent=(v>0?'+':v<0?'−':'')+Math.abs(v); } }
+function svDelay(){ return RM ? 0 : Math.round(700*Math.pow(0.04, (+$('sv-speed').value)/100)); }
+function svLabel(walk){ $('sv-total-label').textContent = walk ? 'This walk’s net count' : 'Running total'; }
+function svButtons(){ var fin=sv.i>=sv.order.length;
+  $('sv-play').textContent = sv.playing ? 'Pause' : (fin ? 'Play again' : (sv.i ? 'Resume' : 'Play'));
+  $('sv-step').disabled=fin; $('sv-finish').disabled=fin; $('sv-prog').textContent=sv.i+' of 32 tiles added'; }
+function svPause(){ sv.playing=false; if(sv.timer){ clearTimeout(sv.timer); sv.timer=null; } svButtons(); }
+function svResetSieve(){ svPause(); sv.i=0; sv.total=0; sv.order.forEach(function(m){ SVtile[m].classList.remove('done','plus','minus','zero'); }); svLabel(false); $('sv-total').textContent='0'; svButtons(); }
+function svFinalMsg(){ var h=svHam();
+  $('sv-msg').innerHTML = h ? 'Total: <b>'+sv.total+'</b> = 5 starting points × 2 directions × '+h+' Hamiltonian cycle'+(h>1?'s':'')+'. Every walk that misses a vertex has cancelled out.'
+    : 'Total: <b>'+sv.total+'</b>. This graph has no Hamiltonian cycle, so everything cancelled.'; }
+function svAddOne(){
+  if(sv.i>=sv.order.length) return;
+  if(sv.walkDone || sv.walk.length) svClearWalk();
+  var m=sv.order[sv.i++], v=sgn(m)*SVW[m], left=5-popc(m); sv.total+=v;
+  SVtile[m].classList.add('done', v>0?'plus':v<0?'minus':'zero'); $('sv-total').textContent=sv.total;
+  if(sv.i>=sv.order.length) svFinalMsg();
+  else if(!v) $('sv-msg').textContent=setList(m)+': no closed walk of length 5 fits inside, so nothing changes.';
+  else $('sv-msg').textContent=(v>0?'Added ':'Subtracted ')+Math.abs(v)+' for '+setList(m)+': '+left+' left out, '+(left%2?'an odd number.':'an even number.');
+  svButtons();
+}
+function svTick(){ if(!sv.playing) return; svAddOne(); if(sv.i>=sv.order.length){ svPause(); return; } sv.timer=setTimeout(svTick, svDelay()); }
+function svStopToken(){ if(sv.tokTimer){ clearInterval(sv.tokTimer); sv.tokTimer=null; } svTok.setAttribute('opacity','0'); }
+function svClearWalkMarks(){ svStopToken(); sv.order.forEach(function(m){ var t=SVtile[m]; t.classList.remove('dim','hit'); t.querySelector('.badge').textContent=''; }); svLabel(false); $('sv-total').textContent=sv.total; }
+function svClearWalk(){ svClearWalkMarks(); sv.walk=[]; sv.walkDone=false; svPaint(); }
+function svClearInspect(){ if(sv.inspect!==null) SVtile[sv.inspect].classList.remove('sel'); sv.inspect=null; }
+function svFree(){ var w=sv.walk, f={}; if(sv.mode!=='walk'||sv.walkDone||!w.length) return f; var last=w[w.length-1];
+  for(var v=0;v<5;v++) if(v!==last && SVM[last][v] && (w.length<4 || SVM[v][w[0]])) f[v]=1; return f; }
+function svPaint(){
+  var w=sv.walk, on={}, inW={}, free=svFree(), I=sv.inspect;
+  for(var i=0;i+1<w.length;i++) on[ekey(w[i],w[i+1])]=1;
+  if(sv.walkDone) on[ekey(w[w.length-1],w[0])]=1;
+  w.forEach(function(v){ inW[v]=1; });
+  PAIRS.forEach(function(p){ var k=ekey(p[0],p[1]), present=SVM[p[0]][p[1]], inside=I!==null && (I>>p[0]&1) && (I>>p[1]&1);
+    svLine[k].setAttribute('class',(present?'sv-edge':'sv-gap')+(present&&on[k]?' on':'')+(I!==null?((present&&inside)?' in':' out'):'')); });
+  svVEls.forEach(function(c,v){ c.setAttribute('class','sv-v'+(inW[v]?' on':'')+(free[v]?' free':'')+(I!==null&&!(I>>v&1)?' out':'')); });
+}
+function svShowWalk(seq){
+  svResetSieve(); svClearInspect(); svClearWalkMarks(); sv.walk=seq.slice(); sv.walkDone=true;
+  var vis=0; seq.forEach(function(v){ vis|=1<<v; }); var terms=[];
+  sv.order.forEach(function(m){ var t=SVtile[m]; if((m&vis)===vis){ var s=sgn(m); t.classList.add('hit'); t.querySelector('.badge').textContent=s>0?'+1':'−1'; terms.push(s); } else t.classList.add('dim'); });
+  var sum=terms.reduce(function(a,b){ return a+b; },0);
+  var expr=terms.map(function(s,k){ return (k===0?(s>0?'':'−'):(s>0?' + ':' − '))+'1'; }).join('');
+  var route=seq.concat([seq[0]]).map(function(v){ return SV.nm[v]; }).join(' → ');
+  svLabel(true); $('sv-total').textContent=sum;
+  $('sv-msg').innerHTML='Walk '+route+'. '+(sum===0
+    ? 'It stays inside '+setList(vis)+', so it is counted once in every tile that contains those vertices, with that tile’s sign: '+expr+' = <b>0</b>. It cancels.'
+    : 'It visits every vertex, so only the full set contains it: '+expr+' = <b>1</b>. It survives.');
+  svPaint();
+  var k=0; svTok.setAttribute('opacity','1');
+  function move(){ var p=svPos(seq[k%seq.length]); svTok.setAttribute('transform','translate('+p[0]+','+p[1]+')'); k++; }
+  move(); if(!RM) sv.tokTimer=setInterval(move,620);
+}
+function svWalkMsg(){
+  var w=sv.walk;
+  if(!w.length){ $('sv-msg').textContent='Click a vertex to start a walk.'; return; }
+  var free=svFree(), last=SV.nm[w[w.length-1]];
+  var s='Your walk so far: '+w.map(function(v){ return SV.nm[v]; }).join(' → ')+' ('+w.length+' of 5 vertices). ';
+  if(!Object.keys(free).length) s+='There is no way to continue and still close the walk. Click '+last+' to back up.';
+  else if(w.length===4) s+='The fifth vertex must also be next to '+SV.nm[w[0]]+', so that the walk can close. Pick a highlighted vertex.';
+  else s+='Pick a highlighted neighbour. Vertices may repeat. Click '+last+' to back up.';
+  $('sv-msg').textContent=s;
+}
+function svVertexClick(v){
+  if(sv.mode!=='walk') return;
+  svClearInspect();
+  var w=sv.walk;
+  if(sv.walkDone){ svClearWalkMarks(); sv.walkDone=false; if(v===w[w.length-1]) w.pop(); else sv.walk=[v]; svPaint(); svWalkMsg(); return; }
+  var last=w[w.length-1];
+  if(!w.length) w.push(v);
+  else if(v===last) w.pop();
+  else if(!SVM[last][v]){ $('sv-msg').textContent=SV.nm[v]+' is not next to '+SV.nm[last]+'. A walk can only move along edges.'; return; }
+  else if(w.length===4 && !SVM[v][w[0]]){ $('sv-msg').textContent=SV.nm[v]+' is next to '+SV.nm[last]+' but not to '+SV.nm[w[0]]+', so the walk could not close. Pick a highlighted vertex.'; return; }
+  else w.push(v);
+  if(w.length===5){ svShowWalk(w); return; }
+  svPaint(); svWalkMsg();
+}
+function svInspect(m){
+  if(sv.inspect===m){ svClearInspect(); svPaint(); $('sv-msg').textContent='Tile deselected.'; return; }
+  if(sv.walkDone || sv.walk.length) svClearWalk();
+  svClearInspect(); sv.inspect=m; SVtile[m].classList.add('sel'); svPaint();
+  var v=SVW[m], left=5-popc(m);
+  $('sv-msg').textContent = !m ? 'The empty set has no vertices and no walks, so it adds 0.'
+    : !v ? 'No closed walk of length 5 fits inside '+setList(m)+' using only its edges, so this tile is 0. A closed walk of odd length always contains an odd cycle, such as a triangle.'
+    : fmt(v)+' closed walks of length 5 stay inside '+setList(m)+'. '+(left===0?'Nothing is left out':left+' '+(left===1?'vertex is':'vertices are')+' left out')+', '+(left%2?'an odd number, so the sieve subtracts '+v+'.':'an even number, so the sieve adds '+v+'.');
+}
+function svToggleEdge(a,b){
+  if(sv.mode!=='edit') return;
+  SVM[a][b]=SVM[b][a]=SVM[a][b]?0:1;
+  svRecount(); svResetSieve(); svClearWalk(); svClearInspect(); svPresets(); svPaint();
+  var h=svHam();
+  $('sv-msg').textContent=(SVM[a][b]?'Added':'Removed')+' the edge '+SV.nm[a]+'–'+SV.nm[b]+' and recounted every tile. This graph has '+h+' Hamiltonian cycle'+(h===1?'':'s')+', so the sieve should end at 10 × '+h+' = '+(10*h)+'. Press Play to check.';
+}
+function svHint(){ $('sv-hint').textContent = sv.mode==='walk' ? 'Click vertices to draw a closed walk of length 5. Vertices may repeat. Click the last vertex to back up.' : 'Click a solid line to remove that edge, or a dashed line to add one. Every tile is recounted at once.'; }
+segGroup($('sv-modes'),'data-m',function(m){
+  sv.mode=m; $('sv-svg').setAttribute('class',m);
+  Object.keys(svHit).forEach(function(k){ if(m==='edit') svHit[k].setAttribute('tabindex','0'); else svHit[k].removeAttribute('tabindex'); });
+  svVEls.forEach(function(c){ if(m==='walk') c.setAttribute('tabindex','0'); else c.removeAttribute('tabindex'); });
+  if(m==='edit') svClearWalk();
+  svHint(); svPaint();
+  $('sv-msg').textContent = m==='edit' ? 'Edit mode. Change the graph, then predict the total: it should be 10 × the number of Hamiltonian cycles.' : 'Click a vertex to start a walk.';
+});
+$('sv-play').addEventListener('click',function(){ if(sv.playing){ svPause(); return; } if(sv.i>=sv.order.length) svResetSieve(); svClearInspect(); svPaint(); sv.playing=true; svButtons(); svTick(); });
+$('sv-step').addEventListener('click',function(){ svPause(); svAddOne(); });
+$('sv-finish').addEventListener('click',function(){ svPause(); while(sv.i<sv.order.length) svAddOne(); });
+$('sv-reset').addEventListener('click',function(){ svResetSieve(); svClearWalk(); svClearInspect(); svPaint(); $('sv-msg').textContent='Reset. Press Play, or click a vertex to start drawing a walk.'; });
+svRecount(); svPresets(); svButtons(); svHint(); svPaint();
+
+/* ---------- step 4: cancelling in pairs ---------- */
+var CP={nm:['s','1','2','3','4','5'], E:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[1,5],[2,4],[1,4]], pos:ringPos(6,1,-90)};
+var SCN={
+  two:{cover:[[0,1],[1,5],[5,0],[2,3],[3,4],[4,2]], flip:[3,4,5]},
+  ham:{cover:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0]], flip:[0,1,2,3,4,5]},
+  tc:{cover:[[0,5],[5,4],[4,1],[1,0],[2,3],[3,2]], flip:[4,5], labels:['a','b']}
+};
+var cp={scene:'two', flipped:false, labels:false};
+function cpXY(i){ return [160+CP.pos[i][0]*112, 150+CP.pos[i][1]*112]; }
+function fac(u,v){ if(u===0||v===0) return {k:u+'>'+v, h:'x<sub>'+CP.nm[u]+'→'+CP.nm[v]+'</sub>'}; var a=Math.min(u,v), b=Math.max(u,v); return {k:a+'-'+b, h:'x<sub>'+a+b+'</sub>'}; }
+function cpArcs(flipped){ var sc=SCN[cp.scene]; return sc.cover.map(function(a,i){ return (flipped && sc.flip.indexOf(i)>=0) ? [a[1],a[0]] : a; }); }
+function cpWeight(arcs){ var f=arcs.map(function(a){ return fac(a[0],a[1]); }); return {h:f.map(function(x){ return x.h; }).join(' · '), k:f.map(function(x){ return x.k; }).sort().join('|')}; }
+function cpDraw(){
+  var svg=$('cp-svg'); clear(svg); var sc=SCN[cp.scene];
+  var defs=S('defs',null,svg);
+  [['cp-ink','mk-ink'],['cp-q','mk-q']].forEach(function(d){ var mk=S('marker',{id:d[0],viewBox:'0 0 10 10',refX:'8',refY:'5',markerWidth:'7',markerHeight:'7',orient:'auto-start-reverse'},defs); S('path',{d:'M0,0 L10,5 L0,10 z','class':d[1]},mk); });
+  CP.E.forEach(function(e){ var a=cpXY(e[0]), b=cpXY(e[1]); S('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],'class':'cp-edge'},svg); });
+  var arcs=cpArcs(cp.flipped);
+  arcs.forEach(function(a,i){
+    var p0=cpXY(a[0]), p1=cpXY(a[1]), dx=p1[0]-p0[0], dy=p1[1]-p0[1], L=Math.hypot(dx,dy), ux=dx/L, uy=dy/L, nx=-uy, ny=ux;
+    var st=[p0[0]+ux*17, p0[1]+uy*17], en=[p1[0]-ux*19, p1[1]-uy*19], off=14;
+    var ct=[(st[0]+en[0])/2+nx*off, (st[1]+en[1])/2+ny*off];
+    var f=sc.flip.indexOf(i)>=0;
+    S('path',{d:'M'+st[0].toFixed(1)+','+st[1].toFixed(1)+' Q'+ct[0].toFixed(1)+','+ct[1].toFixed(1)+' '+en[0].toFixed(1)+','+en[1].toFixed(1),'class':'cp-arc'+(f?' f':''),'marker-end':'url(#'+(f?'cp-q':'cp-ink')+')'},svg);
+    if(sc.labels && cp.labels && f){ var j=sc.flip.indexOf(i), mx=0.25*st[0]+0.5*ct[0]+0.25*en[0]+nx*10, my=0.25*st[1]+0.5*ct[1]+0.25*en[1]+ny*10;
+      var g=S('g',{'class':'cp-lab'},svg); S('rect',{x:mx-10,y:my-10,width:20,height:20,rx:5},g); T(g,mx,my+4,sc.labels[j],'', 'middle'); }
+  });
+  for(var v=0;v<6;v++){ var p=cpXY(v); S('circle',{cx:p[0],cy:p[1],r:14,'class':'cp-v'+(v===0?' s':'')},svg); T(svg,p[0],p[1]+4.5,CP.nm[v],'cp-vt'+(v===0?' s':''),'middle'); }
+  var w0=cpWeight(cpArcs(false)), w1=cpWeight(cpArcs(true));
+  $('cp-w0').innerHTML=w0.h;
+  $('cp-w1').innerHTML= cp.flipped ? w1.h+(w0.k===w1.k?'<span class="verdict same">same weight</span>':'<span class="verdict diff">different weight</span>') : '–';
+  $('cp-labels').hidden = cp.scene!=='tc';
+  $('cp-labels').setAttribute('aria-pressed', cp.labels?'true':'false');
+  $('cp-labels').textContent = cp.labels ? 'Remove labels' : 'Add labels';
+  $('cp-flip').textContent = cp.flipped ? 'Flip back' : (cp.scene==='ham' ? 'Flip the whole cycle' : (cp.scene==='tc' ? 'Flip the 2-cycle' : 'Flip the cycle that avoids s'));
+  var msg;
+  if(cp.scene==='two') msg = !cp.flipped ? 'Two cycles: s → 1 → 5 → s, and 2 → 3 → 4 → 2. The second one avoids s, so it is the one to flip.'
+      : 'The flipped cover is a different term of the determinant, but its weight is identical: x₂₃, x₃₄ and x₂₄ do not care about direction. The two terms add up to w + w = 0, so this pair vanishes.';
+  else if(cp.scene==='ham') msg = !cp.flipped ? 'A single cycle through every vertex, including s. There is no cycle that avoids s, so the pairing rule leaves it alone. Flip it anyway to compare with its mirror image.'
+      : 'The mirror image uses x_s→5 and x_1→s instead of x_s→1 and x_5→s. The arcs at s have one number per direction, so the two weights differ and nothing cancels. Hamiltonian cycles survive, and the sum is nonzero exactly when one exists.';
+  else if(!cp.labels) msg = !cp.flipped ? 'A 2-cycle runs along the edge 2–3 and straight back. The other cycle passes through s, so the 2-cycle is the one to flip.'
+      : 'Flipping a 2-cycle gives back the very same cover. It has no twin, so it would survive and make the sum nonzero without a Hamiltonian cycle. Add labels to fix this.';
+  else msg = !cp.flipped ? 'Now every arc carries labels, and every label must be used exactly once. Arc 2→3 carries a, arc 3→2 carries b.'
+      : 'The flip swaps the labels: now 2→3 carries b and 3→2 carries a. That is a different labelled cover with the same weight, so it has a twin again and the pair cancels.';
+  $('cp-msg').textContent=msg;
+}
+segGroup($('cp-scenes'),'data-s',function(s){ cp.scene=s; cp.flipped=false; cp.labels=false; cpDraw(); });
+$('cp-flip').addEventListener('click',function(){ cp.flipped=!cp.flipped; cpDraw(); });
+$('cp-labels').addEventListener('click',function(){ cp.labels=!cp.labels; cp.flipped=false; cpDraw(); });
+cpDraw();
+
+/* ---------- step 5: narrow sieve ---------- */
+var ns={n:12, bits:null, mmax:2, counts:[], N:0, raf:null, chords:[]};
+function nsChords(n){ var out=[], p=n/(n*(n-1)/2-n); for(var a=0;a<n;a++) for(var b=a+2;b<n;b++){ if(a===0&&b===n-1) continue; if(Math.random()<p) out.push([a,b]); } return out; }
+function nsExact(n){ var k=n/2, tot=lnC(n,k), out=[]; for(var m=0;m<k;m++){ var r=k-m; out.push(Math.exp(Math.log(n/r)+2*lnC(k-1,r-1)-tot)); } return out; }
+function nsDrawRing(){
+  drawRing($('ns-svg'), ns.bits, {size:300, r:110, vr:8.5, labels:true, chords:$('ns-chords').checked?ns.chords:null});
+  var m=directCount(ns.bits), k=ns.n/2; $('ns-m').textContent=m;
+  var chips=''; ns.bits.forEach(function(b,i){ if(!b) chips+='<span class="chip">'+(i+1)+'</span>'; });
+  for(var j=1;j<=m;j++) chips+='<span class="chip d">d'+j+'</span>';
+  $('ns-chips').innerHTML=chips+'<span class="note" style="align-self:center">'+k+' + '+m+' = '+(k+m)+' labels</span>';
+  $('ns-terms').innerHTML='2<sup>'+(k+m)+'</sup> = '+fmt(Math.pow(2,k+m))+' terms';
+  $('ns-full').innerHTML='2<sup>'+ns.n+'</sup> = '+fmt(Math.pow(2,ns.n))+' terms';
+}
+var NH={x0:40,x1:430,y0:14,y1:200};
+function nsHist(){
+  var svg=$('ns-hist'); clear(svg); var k=ns.n/2, ex=nsExact(ns.n), ymax=Math.max.apply(null,ex)*1.2, bw=(NH.x1-NH.x0)/k;
+  function y(v){ return NH.y1-v/ymax*(NH.y1-NH.y0); }
+  var step = ymax>0.4 ? 0.1 : 0.05;
+  for(var t=0;t<=ymax;t+=step){ S('line',{x1:NH.x0,x2:NH.x1,y1:y(t),y2:y(t),'class':'grid'},svg); T(svg,NH.x0-6,y(t)+4,t.toFixed(2),'', 'end'); }
+  for(var m=0;m<k;m++){
+    var x=NH.x0+m*bw, h=ns.N? ns.counts[m]/ns.N : 0;
+    S('rect',{x:x+bw*0.14,y:y(h),width:bw*0.72,height:Math.max(0,NH.y1-y(h)),'class':'bar'+(m<=ns.mmax?' in':'')},svg);
+    S('line',{x1:x+bw*0.08,x2:x+bw*0.92,y1:y(ex[m]),y2:y(ex[m]),'class':'exact'},svg);
+    T(svg,x+bw/2,NH.y1+16,String(m),'', 'middle');
+  }
+  var cx=NH.x0+(ns.mmax+1)*bw; S('line',{x1:cx,x2:cx,y1:NH.y0,y2:NH.y1,'class':'cutline'},svg);
+  T(svg,cx-4,NH.y0+10,'caught ←','', 'end');
+  T(svg,(NH.x0+NH.x1)/2,NH.y1+34,'direct arcs m','', 'middle');
+}
+function nsReadout(){
+  var k=ns.n/2, ex=nsExact(ns.n), P=0, cost=0;
+  for(var m=0;m<=ns.mmax;m++){ P+=ex[m]; cost+=Math.pow(2,k+m); }
+  $('ns-cut-out').textContent=ns.mmax;
+  $('ns-P').textContent=P.toFixed(3);
+  $('ns-cost').textContent=fmt(cost);
+  $('ns-tests').textContent=(1/P).toFixed(1);
+  $('ns-total').textContent=fmt(cost/P);
+  $('ns-full2').textContent=fmt(Math.pow(2,ns.n));
+}
+function nsReset(){ if(ns.raf) cancelAnimationFrame(ns.raf); ns.raf=null; var k=ns.n/2; ns.counts=new Array(k).fill(0); ns.N=0; $('ns-N').textContent='0';
+  var cut=$('ns-cut'); cut.max=k-1; if(ns.mmax>k-1) ns.mmax=k-1; cut.value=ns.mmax; ns.chords=nsChords(ns.n); ns.bits=randomSplit(ns.n); nsDrawRing(); nsHist(); nsReadout(); }
+function nsRun(){
+  if(ns.raf) cancelAnimationFrame(ns.raf); var k=ns.n/2; ns.counts=new Array(k).fill(0); ns.N=0; var total=2000, batch=RM?total:36;
+  (function tick(){ for(var i=0;i<batch && ns.N<total;i++){ var b=randomSplit(ns.n); ns.counts[directCount(b)]++; ns.N++; ns.bits=b; }
+    nsDrawRing(); nsHist(); $('ns-N').textContent=fmt(ns.N); if(ns.N<total) ns.raf=requestAnimationFrame(tick); else ns.raf=null; })();
+}
+$('ns-new').addEventListener('click',function(){ ns.bits=randomSplit(ns.n); nsDrawRing(); });
+$('ns-graph').addEventListener('click',function(){ ns.chords=nsChords(ns.n); nsDrawRing(); });
+$('ns-chords').addEventListener('change',nsDrawRing);
+$('ns-run').addEventListener('click',nsRun);
+$('ns-n').addEventListener('input',function(){ ns.n=+this.value; $('ns-n-out').textContent=ns.n; ns.mmax=Math.max(1,Math.round(ns.n/6)); nsReset(); });
+$('ns-cut').addEventListener('input',function(){ ns.mmax=+this.value; nsHist(); nsReadout(); });
+nsReset();
+
+/* ---------- step 6: amplify ---------- */
+var am={P:1/400, none:false, ang:0, j:0, tests:0, Tc:Infinity, busy:false, gen:0, ghost:null};
+var AO={x:44,y:150,R:122};
+function amTheta(){ return am.none ? 0 : Math.asin(Math.sqrt(am.P)); }
+function amJstar(){ var th=Math.asin(Math.sqrt(am.P)); return Math.max(1, Math.round((Math.PI/(2*th)-1)/2)); }
+function amPt(p){ return [AO.x+AO.R*p[0], AO.y-AO.R*p[1]]; }
+function amDraw(tip, mirror){
+  var svg=$('am-svg'); clear(svg);
+  S('path',{d:'M'+AO.x+','+(AO.y+AO.R)+' A'+AO.R+','+AO.R+' 0 0 0 '+AO.x+','+(AO.y-AO.R),'class':'am-arc'},svg);
+  S('line',{x1:AO.x,y1:AO.y,x2:AO.x+AO.R+14,y2:AO.y,'class':'am-axis'},svg);
+  S('line',{x1:AO.x,y1:AO.y+AO.R,x2:AO.x,y2:AO.y-AO.R-8,'class':'am-axis'},svg);
+  T(svg,AO.x+6,AO.y-AO.R-2,'test fired','');
+  T(svg,AO.x+AO.R+10,AO.y+18,'did not fire','', 'end');
+  var th=amTheta(), sp=amPt([Math.cos(th),Math.sin(th)]);
+  S('line',{x1:AO.x,y1:AO.y,x2:sp[0],y2:sp[1],'class':'am-start'},svg);
+  if(mirror!==null && mirror!==undefined){ var a=mirror, m1=amPt([Math.cos(a)*1.12,Math.sin(a)*1.12]); S('line',{x1:AO.x,y1:AO.y,x2:m1[0],y2:m1[1],'class':'am-mirror'},svg); }
+  if(am.ghost){ var gp=amPt(am.ghost); S('line',{x1:AO.x,y1:AO.y,x2:gp[0],y2:gp[1],'class':'am-ghost'},svg); }
+  var tp=amPt(tip); S('line',{x1:AO.x,y1:AO.y,x2:tp[0],y2:tp[1],'class':'am-vec'},svg); S('circle',{cx:tp[0],cy:tp[1],r:5,'class':'am-tip'},svg);
+  var bx=300, bh=2*AO.R, by=AO.y-AO.R, pr=tip[1]*tip[1];
+  S('rect',{x:bx,y:by,width:20,height:bh,rx:3,'class':'am-bar-bg'},svg);
+  S('rect',{x:bx,y:by+bh*(1-pr),width:20,height:bh*pr,rx:3,'class':'am-bar'},svg);
+  T(svg,bx+10,by-6,'P(yes)','', 'middle'); T(svg,bx+10,by+bh+16,pr.toFixed(3),'', 'middle');
+}
+function amText(){
+  var J=amJstar();
+  $('am-j').textContent=am.j+' of about '+J;
+  $('am-prob').textContent=Math.pow(Math.sin(am.ang),2).toFixed(3);
+  $('am-t').textContent=fmt(am.tests)+(am.tests>=am.Tc?' (fired on test '+fmt(am.Tc)+')':'');
+  var strip=$('am-strip'), shown=Math.min(am.tests,140), html='';
+  if(am.tests>140) html+='<span>+'+fmt(am.tests-140)+' earlier</span>';
+  for(var i=am.tests-shown+1;i<=am.tests;i++) html+='<i'+(i===am.Tc?' class="hit"':'')+'></i>';
+  strip.innerHTML=html;
+  var inv=1/am.P;
+  $('am-expect').innerHTML = am.none ? 'No Hamiltonian cycle: the “fired” part is exactly zero, so the arrow lies flat and the reflections cannot move it. The algorithm never says yes.'
+    : 'On average a classical computer needs about 1/P = '+fmt(inv)+' tests. Amplitude amplification needs about π/(4√P) ≈ '+(Math.PI/4/Math.sqrt(am.P)).toFixed(1)+' rounds, which is about '+fmt(2*J)+' test runs.';
+}
+function amReset(){
+  am.gen++; am.busy=false; am.j=0; am.ang=amTheta(); am.tests=0; am.ghost=null;
+  am.Tc = am.none ? Infinity : Math.max(1, Math.ceil(Math.log(1-Math.random())/Math.log(1-am.P)));
+  $('am-msg').textContent=''; amDraw([Math.cos(am.ang),Math.sin(am.ang)], null); amText();
+}
+function amRound(dur, done){
+  var gen=am.gen, th=amTheta(), a0=am.ang, p0=[Math.cos(a0),Math.sin(a0)], p1=[p0[0],-p0[1]], a2=a0+2*th, p2=[Math.cos(a2),Math.sin(a2)];
+  am.ghost=p0;
+  function lerp(a,b,t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]; }
+  animate(dur, function(t){ if(gen===am.gen) amDraw(lerp(p0,p1,t), 0); }, function(){
+    if(gen!==am.gen) return;
+    animate(dur, function(t){ if(gen===am.gen) amDraw(lerp(p1,p2,t), th); }, function(){
+      if(gen!==am.gen) return;
+      am.ang=a2; am.j++; am.tests+=2; amDraw(p2,null); amText(); if(done) done();
+    });
+  });
+}
+function amRace(){
+  amReset(); var gen=am.gen, J=amJstar(), dur=Math.max(40, Math.min(380, 2600/J)); am.busy=true;
+  $('am-msg').textContent='Running '+J+' rounds…';
+  (function next(){
+    if(gen!==am.gen) return;
+    if(am.j<J){ amRound(dur, next); return; }
+    var p=Math.pow(Math.sin(am.ang),2), yes=!am.none && Math.random()<p;
+    var q='Quantum: measured after '+am.j+' rounds ('+fmt(am.tests)+' test runs) and got '+(yes?'“yes”':'“no”')+'. The chance of yes was '+p.toFixed(3)+'. ';
+    if(am.none){ $('am-msg').textContent=q+'Classical: '+fmt(am.tests)+' tests, none fired, and none ever will.'; am.busy=false; return; }
+    var start=am.tests, target=am.Tc;
+    if(target<=start){ $('am-msg').textContent=q+'Classical got lucky this time: a test fired on try '+fmt(target)+'.'; amText(); am.busy=false; return; }
+    animate(RM?0:1400, function(t){ if(gen!==am.gen) return; am.tests=Math.round(start+(target-start)*t); amText(); }, function(){
+      if(gen!==am.gen) return; am.tests=target; amText();
+      $('am-msg').textContent=q+'Classical: kept repeating and a test fired on try '+fmt(target)+'. The average is '+fmt(1/am.P)+'.'; am.busy=false; });
+  })();
+}
+function amP(){ var v=+$('am-p').value; am.P=Math.pow(10,-v); var inv=1/am.P, d=Math.pow(10,Math.floor(Math.log10(inv))-1); $('am-p-out').textContent='1 in '+fmt(Math.round(inv/d)*d); }
+$('am-p').addEventListener('input',function(){ amP(); amReset(); });
+$('am-none').addEventListener('change',function(){ am.none=this.checked; amReset(); });
+$('am-reset').addEventListener('click',amReset);
+$('am-race').addEventListener('click',amRace);
+$('am-step').addEventListener('click',function(){ if(am.busy) return; am.busy=true; amRound(RM?0:380,function(){ am.busy=false; }); });
+amP(); amReset();
+
+/* ---------- step 7: trade-off ---------- */
+function psi(mu){ return 0.5+mu+1-H(2*mu); }
+function phi(mu){ return 0.5+mu+(1-H(2*mu))/2; }
+var TO={x0:56,x1:620,y0:14,y1:262,m0:0.05,m1:0.35,c0:1.60,c1:1.80};
+function tx(mu){ return TO.x0+(mu-TO.m0)/(TO.m1-TO.m0)*(TO.x1-TO.x0); }
+function ty(c){ return TO.y1-(c-TO.c0)/(TO.c1-TO.c0)*(TO.y1-TO.y0); }
+function toBuild(){
+  var svg=$('to-svg'); clear(svg);
+  var cp=S('clipPath',{id:'to-clip'},S('defs',null,svg)); S('rect',{x:TO.x0,y:TO.y0,width:TO.x1-TO.x0,height:TO.y1-TO.y0},cp);
+  for(var c=1.60;c<=1.8001;c+=0.05){ S('line',{x1:TO.x0,x2:TO.x1,y1:ty(c),y2:ty(c),'class':'grid'},svg); T(svg,TO.x0-8,ty(c)+4,c.toFixed(2),'', 'end'); }
+  for(var mu=0.05;mu<=0.3501;mu+=0.05){ S('line',{x1:tx(mu),x2:tx(mu),y1:TO.y0,y2:TO.y1,'class':'grid'},svg); T(svg,tx(mu),TO.y1+18,mu.toFixed(2),'', 'middle'); }
+  T(svg,TO.x1,TO.y1+34,'cutoff μ','', 'end'); T(svg,TO.x0+4,TO.y0+12,'base of the total cost','');
+  var g=S('g',{'clip-path':'url(#to-clip)'},svg);
+  [['c',psi],['q',phi]].forEach(function(d){ var pts=[]; for(var i=0;i<=300;i++){ var m=TO.m0+(TO.m1-TO.m0)*i/300; pts.push(tx(m).toFixed(1)+','+ty(Math.pow(2,d[1](m))).toFixed(1)); } S('polyline',{points:pts.join(' '),'class':'curve '+d[0]},g); });
+  var mc=(Math.SQRT2-1)/2, mq=1/6;
+  S('circle',{cx:tx(mc),cy:ty(Math.pow(2,psi(mc))),r:5,'class':'minpt c'},svg); T(svg,tx(mc)+8,ty(Math.pow(2,psi(mc)))-8,'Björklund: 1.6569','lbl c');
+  S('circle',{cx:tx(mq),cy:ty(Math.pow(2,phi(mq))),r:5,'class':'minpt q'},svg); T(svg,tx(mq)+8,ty(Math.pow(2,phi(mq)))+18,'this paper: 1.6330','lbl q strong');
+  TO.cur=S('g',null,svg);
+  var st=$('to-stack'); st.innerHTML='';
+  [['full','Normal sieve',''],['cl','Björklund',''],['qu','This paper','q']].forEach(function(r){ var d=document.createElement('div'); d.className='srow '+r[2]; d.innerHTML='<span>'+r[1]+'</span><div class="strack" id="tr-'+r[0]+'"></div><b id="tv-'+r[0]+'"></b>'; st.appendChild(d); });
+}
+function fillTrack(id, parts){ var el=$(id), sc=1.12; el.innerHTML=''; parts.forEach(function(p){ var d=document.createElement('div'); d.className='sg '+p[1]; d.style.width=(100*p[0]/sc)+'%'; if(p[0]/sc>0.075) d.textContent=p[0].toFixed(3); el.appendChild(d); }); }
+function toUpdate(){
+  var mu=+$('to-mu').value; $('to-mu-out').textContent=mu.toFixed(3);
+  var g=TO.cur; clear(g); S('line',{x1:tx(mu),x2:tx(mu),y1:TO.y0,y2:TO.y1,'class':'cursor'},g);
+  var bc=Math.pow(2,psi(mu)), bq=Math.pow(2,phi(mu));
+  if(bc<=TO.c1) S('circle',{cx:tx(mu),cy:ty(bc),r:4,'class':'dot c'},g);
+  if(bq<=TO.c1) S('circle',{cx:tx(mu),cy:ty(bq),r:4,'class':'dot q'},g);
+  var rep=1-H(2*mu);
+  fillTrack('tr-full',[[1,'all']]); $('tv-full').innerHTML='1.000 → 2<sup>n</sup>';
+  fillTrack('tr-cl',[[0.5,'v2'],[mu,'d'],[rep,'rc']]); $('tv-cl').innerHTML=psi(mu).toFixed(3)+' → '+bc.toFixed(4)+'<sup>n</sup>';
+  fillTrack('tr-qu',[[0.5,'v2'],[mu,'d'],[rep/2,'rq']]); $('tv-qu').innerHTML=phi(mu).toFixed(3)+' → '+bq.toFixed(4)+'<sup>n</sup>';
+  $('to-read').innerHTML='At μ = '+mu.toFixed(3)+': one test costs about '+Math.pow(2,0.5+mu).toFixed(3)+'<sup>n</sup> steps and catches the cycle with probability about 1/'+Math.pow(2,rep).toFixed(4)+'<sup>n</sup>. Classical total ≈ '+bc.toFixed(4)+'<sup>n</sup>, quantum total ≈ '+bq.toFixed(4)+'<sup>n</sup>.';
+}
+toBuild(); toUpdate();
+$('to-mu').addEventListener('input',toUpdate);
+$('to-c').addEventListener('click',function(){ $('to-mu').value=((Math.SQRT2-1)/2).toFixed(4); toUpdate(); });
+$('to-q').addEventListener('click',function(){ $('to-mu').value=(1/6).toFixed(4); toUpdate(); });
+
+var DB={x0:56,x1:620,y0:14,y1:216,lmin:-1,lmax:10};
+function dbx(mu){ return DB.x0+mu/0.5*(DB.x1-DB.x0); }
+function dby(l){ l=Math.max(DB.lmin,Math.min(DB.lmax,l)); return DB.y1-(l-DB.lmin)/(DB.lmax-DB.lmin)*(DB.y1-DB.y0); }
+function dbDraw(){
+  var n=+$('db-n').value; $('db-n-out').textContent=n; var k=n/2, svg=$('db-svg'); clear(svg);
+  function lp(m){ var r=k-m; return Math.log(n/r)+2*lnC(k-1,r-1); }
+  [-1,0,1,2,4,6,8,10].forEach(function(l){ S('line',{x1:DB.x0,x2:DB.x1,y1:dby(l),y2:dby(l),'class':'grid'},svg); var v=Math.pow(2,l); T(svg,DB.x0-8,dby(l)+4,(v<1?'½':fmt(v))+'×','', 'end'); });
+  [0,0.1,0.2,0.3,0.4,0.5].forEach(function(mu){ T(svg,dbx(mu),DB.y1+18,mu.toFixed(1),'', 'middle'); });
+  T(svg,DB.x1,DB.y1+34,'m / n','', 'end');
+  var bw=(DB.x1-DB.x0)/k*0.78, mq=-1, mc=-1;
+  for(var m=0;m<k-1;m++){ var l=(lp(m+1)-lp(m))/Math.LN2, cls = l>2 ? 'both' : (l>1 ? 'conly' : 'none');
+    if(mq<0 && l<=2) mq=m; if(mc<0 && l<=1) mc=m;
+    var x=dbx(m/n), y0=dby(0), y1=dby(l); S('rect',{x:x-bw/2,y:Math.min(y0,y1),width:bw,height:Math.abs(y1-y0),'class':'dbar '+cls},svg); }
+  S('line',{x1:DB.x0,x2:DB.x1,y1:dby(1),y2:dby(1),'class':'thr c'},svg); T(svg,DB.x1-4,dby(1)-6,'classical break-even, 2×','lbl c','end');
+  S('line',{x1:DB.x0,x2:DB.x1,y1:dby(2),y2:dby(2),'class':'thr q'},svg); T(svg,DB.x1-4,dby(2)-6,'quantum break-even, 4×','lbl q','end');
+  S('line',{x1:dbx(mq/n),x2:dbx(mq/n),y1:DB.y0,y2:DB.y1,'class':'thr q'},svg);
+  S('line',{x1:dbx(mc/n),x2:dbx(mc/n),y1:DB.y0,y2:DB.y1,'class':'thr c'},svg);
+  $('db-read').innerHTML='n = '+n+': the quantum algorithm stops raising the cutoff at m = '+mq+' (m/n = '+(mq/n).toFixed(3)+'), the classical one at m = '+mc+' (m/n = '+(mc/n).toFixed(3)+'). As n grows these approach 1/6 ≈ 0.167 and 0.207. Blue bars: worth raising for both. Grey: only classically. Pale: for neither.';
+}
+dbDraw();
+$('db-n').addEventListener('input',dbDraw);
+
+/* ---------- step 8: quiz ---------- */
+var QUIZ=[
+  {q:'Björklund’s test runs on a graph with no Hamiltonian cycle. What does it answer?', o:['“No”, every single time','“No” most of the time, but “yes” after an unlucky split','It depends on the random numbers'], a:0,
+   e:'With no Hamiltonian cycle, the sum is the zero polynomial for every split, so no split and no random numbers can make it nonzero. The error is one-sided, which is why amplitude amplification can trust every “yes”.'},
+  {q:'Why can’t Grover’s search speed up the 2<sup>n/2+m</sup>-term sum inside one test?', o:['The terms are too large to fit in qubits','A sum needs every term, and there is no single marked item to find','Grover only works on unsorted lists, and graphs are sorted'], a:1,
+   e:'Grover finds a marked item among many. Adding up all the items is a different task with no general quadratic speed-up. The paper amplifies over the random choices between tests instead.'},
+  {q:'What makes the non-Hamiltonian cycle covers disappear from the determinant?', o:['The determinant skips covers with more than one cycle','The random split removes them','Each one pairs with a twin of equal weight, and 1 + 1 = 0'], a:2,
+   e:'Flipping a cycle that avoids s gives a different cover with the same weight, because edges away from s have one number for both directions. In characteristic two the pair adds to zero.'},
+  {q:'Why does Björklund need labels at all?', o:['A 2-cycle flips into itself, so without labels it has no twin','Labels make each determinant faster to compute','Labels store the random split'], a:0,
+   e:'Going along an edge and straight back is a 2-cycle, and its flip is itself. With different labels on its two arcs, the flip swaps them and produces a genuine twin.'},
+  {q:'What makes the sieve “narrow”?', o:['It only works on graphs with few edges','It runs over n/2 + m labels instead of all n vertices','It uses fewer random numbers'], a:1,
+   e:'The determinant already handles the vertices of V₁. Inclusion–exclusion is needed only over the V₂ vertices and the m extra labels, so a test has 2<sup>n/2+m</sup> terms instead of 2<sup>n</sup>.'},
+  {q:'Raising the cutoff by one doubles the cost of a test. When does the quantum algorithm still want to raise it?', o:['Always, since more labels catch more cycles','When success becomes more than 2× likelier','When success becomes more than 4× likelier'], a:2,
+   e:'Quantum rounds scale like 1/√P. To pay for a test that costs twice as much, √P must more than double, so P must more than quadruple. Classically, doubling P is enough, which is why Björklund uses the larger cutoff.'},
+  {q:'Björklund’s 2<sup>n/2</sup> algorithm for bipartite graphs uses one fixed split. Does this paper’s trick speed it up?', o:['No, because there is no random trial to amplify','Yes, to 2<sup>n/4</sup>','Yes, to 1.633<sup>n</sup>'], a:0,
+   e:'Amplitude amplification cuts the number of repetitions of a random trial. A fixed split is a single deterministic run, so there is nothing to amplify.'}
+];
+(function(){
+  var box=$('quiz-box'), answered=0, right=0;
+  QUIZ.forEach(function(item,qi){
+    var d=document.createElement('div'); d.className='qz';
+    d.innerHTML='<p class="qq">'+(qi+1)+'. '+item.q+'</p><div class="opts"></div><p class="why" hidden></p>';
+    var opts=d.querySelector('.opts'), why=d.querySelector('.why'), done=false;
+    item.o.forEach(function(text,oi){ var b=document.createElement('button'); b.type='button'; b.className='opt'; b.innerHTML=text;
+      b.addEventListener('click',function(){ if(done) return; done=true; answered++; if(oi===item.a) right++;
+        opts.querySelectorAll('.opt').forEach(function(x,xi){ if(xi===item.a) x.classList.add('right'); else if(xi===oi) x.classList.add('wrong'); });
+        why.innerHTML=(oi===item.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+item.e; why.hidden=false;
+        $('quiz-score').textContent=right+' of '+answered+' right so far'+(answered===QUIZ.length?'. All done.':'.'); });
+      opts.appendChild(b); });
+    box.appendChild(d);
+  });
+})();
+})();
+</script>
+</body>
+</html>

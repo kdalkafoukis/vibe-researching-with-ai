@@ -4,6 +4,8 @@
 
 Konstantinos Dalkafoukis, with Claude Opus 5.5 (Anthropic) · **[Read the paper (PDF)](paper.pdf)**
 
+**Interactive explainer:** [`explainer.html`](explainer.html) walks through the paper in nine steps, with live figures: the puzzle, how the bounds grow, a normal sieve, Björklund's cancellation trick, the narrow sieve, amplitude amplification, the moved cutoff and a short quiz. Download it and open it in a browser.
+
 > ⚠️ Draft, not peer reviewed.
 
 ## Main result
